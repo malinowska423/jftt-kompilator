@@ -1,9 +1,11 @@
 gcc = g++ -std=c++17 
 
-all: test
+all: compiler
 
-test: 
+compiler: 
 	bison -d -o parser.c parser.y
 	flex -o lexer.c lexer.l
-	$(gcc) -c lexer.c
-	$(gcc) -c parser.c
+	$(gcc) lexer.c parser.c compiler.cpp -o compiler
+
+clean: 
+	rm -f lexer.c lexer.o parser.c parser.h parser.o compiler

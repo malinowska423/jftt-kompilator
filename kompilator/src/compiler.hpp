@@ -12,3 +12,5 @@
 #include <map>
 
 using namespace std;
+
+void test(char* test);

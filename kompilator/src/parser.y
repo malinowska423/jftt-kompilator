@@ -113,27 +113,19 @@ int main(int argv, char* argc[]) {
         return 1;
     }
 
-    string msg =". .. ... ";
-    for (const char c: msg) {
-        cout << c << flush;
-        usleep(80000);
+    yyin = fopen(argc[1], "r");
+    if (yyin == NULL){
+        cout << "Plik nie istnieje" << endl;
+        return 1;
     }
 
-    // yyin = fopen(argc[1], "r");
-    // if (yyin == NULL)
-    //     error(argc[1], 0, "File does not exist:");
-    // createRegisters();
 	yyparse();
-    // optymize(argc[0]);
-    // print(argc[2]);
-    cout << "Compiled without errors •ᴗ•\n" << endl;
+
+    cout << "Kompilacja zakonczona pomyslnie" << endl;
 	return 0;
 }
 
 int yyerror(string err) {
-    // cout << "(╯°□°）╯︵ ┻━┻\n\n";
-    // usleep(500000);
-    // cout << "\e[1m\x1B[31m[ ERROR ]\e[0m \e[1m[ LINE " << yylineno << " ] \e[1m\x1B[31m" << err << ".\e[0m\n" << endl;
-    cout << "Error" << endl;
+    cout << "Wystapil blad:\n\t" << err << endl;
     exit(1);
 }
