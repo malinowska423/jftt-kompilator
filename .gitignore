@@ -1,1 +1,16 @@
 /labor4
+/kompilator/maszyna_wirtualna/lexer.cc
+/kompilator/maszyna_wirtualna/lexer.o
+/kompilator/maszyna_wirtualna/main.o
+/kompilator/maszyna_wirtualna/maszyna-wirtualna
+/kompilator/maszyna_wirtualna/mw.o
+/kompilator/maszyna_wirtualna/parser.cc
+/kompilator/maszyna_wirtualna/parser.hh
+/kompilator/maszyna_wirtualna/parser.o
+/kompilator/src/lexer.c
+/kompilator/src/lexer.o
+/kompilator/src/parser.o
+/kompilator/src/parser.c
+/kompilator/src/parser.h
+/kompilator/src/compiler
+/kompilator/tests/
