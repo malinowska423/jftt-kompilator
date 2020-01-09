@@ -5,9 +5,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <memory>
-#include <cstring>
-#include "parser.tab.h"
+// #include <memory>
+// #include <cstring>
+#include "parser.h"
 
 const std::string errorMsg = "error: ";
 
@@ -21,7 +21,7 @@ PUNCT                   [\(\)\:\;]
 
 %%
 "DECLARE"               { return DECLARE; }
-"BEGIN"                 { return BEGIN; }
+"BEGIN"                 { return _BEGIN; }
 "END"                   { return END; }
 
 "READ"                  { return READ; }
@@ -52,8 +52,8 @@ PUNCT                   [\(\)\:\;]
 "LEQ"                   { return LEQ; }
 "GEQ"                   { return GEQ; }
 
-"PLUS"                  { return ADD; }
-"MINUS"                 { return SUB; }
+"PLUS"                  { return PLUS; }
+"MINUS"                 { return MINUS; }
 "TIMES"                 { return TIMES; }
 "DIV"                   { return DIV; }
 "MOD"                   { return MOD; }
