@@ -7,8 +7,8 @@ extern FILE *yyin;
 int yyerror(const string str);
 %}
 
-%define parse.error verbose
-%expect 0
+// %define parse.error verbose
+// %expect 0
 
 %union {
     std::string *pidentifier;
@@ -18,8 +18,8 @@ int yyerror(const string str);
 //Tokens
 %start program
 %token DECLARE _BEGIN END
-%token <lbl> IF WHILE DO
-%token <lfor> FOR 
+%token IF WHILE DO
+%token FOR 
 %token THEN ELSE ENDIF FROM TO DOWNTO ENDFOR ENDWHILE ENDDO
 %token READ WRITE       
 %token LE GE LEQ GEQ EQ NEQ
@@ -28,9 +28,9 @@ int yyerror(const string str);
 %token <pidentifier> pidentifier
 %token <num> num
 //Types
-%type <var> value
-%type <id> identifier
-%type <cond> condition;
+// %type <var> value
+// %type <id> identifier
+// %type <cond> condition;
 
 //Operators precedence
 %left PLUS MINUS
@@ -40,27 +40,27 @@ int yyerror(const string str);
 %%
 program:
 
-    DECLARE declarations _BEGIN commands END                            {}
+    DECLARE declarations _BEGIN commands END                            {shout(1);}
     | _BEGIN commands END                                               {}
     ;
 
 declarations:
 
-    declarations',' pidentifier                                     {}
-    | declarations',' pidentifier'('num':'num')'                      {}
+    declarations',' pidentifier                                     {shout(2);}
+    | declarations',' pidentifier'('num':'num')'                      {shout(3);}
     | pidentifier                                                   {}
-    | pidentifier'('num':'num')'                                    {}
+    | pidentifier'('num':'num')'                                    {shout(5);}
     ;
 
 commands:
 
-    commands command                                                    { }
-    | command                                                           { }
+    commands command                                                    {shout(6); }
+    | command                                                           {shout(7); }
     ;
 
 command:
 
-    identifier ASSIGN expression';'                                   {}
+    identifier ASSIGN expression';'                                   {shout(8);}
     | IF condition THEN commands ELSE commands ENDIF                  {}
     | IF condition THEN commands ENDIF                                {}
     | WHILE condition DO commands ENDWHILE                            {}
@@ -93,22 +93,22 @@ condition:
 
 value:
 
-    num                         {}
-    | identifier                {}
+    num                         {shout(9);}
+    | identifier                {shout(10);}
     ;
 
 identifier:
 
-    pidentifier                                 {}
-    | pidentifier'('pidentifier')'              {}
-    | pidentifier'('num')'                      {}
+    pidentifier                                 {shout(11);}
+    | pidentifier'('pidentifier')'              {shout(12);}
+    | pidentifier'('num')'                      {shout(13);}
     ;
 
 %%
 
 
 int main(int argv, char* argc[]) {
-    if( argv != 3 ) {
+    if( argv != 2 ) {
         cerr << "Prawidlowe wywolanie: kompilator plik_wejsciowy plik_wyjsciowy" << endl;
         return 1;
     }
@@ -126,6 +126,6 @@ int main(int argv, char* argc[]) {
 }
 
 int yyerror(string err) {
-    cout << "Wystapil blad:\n\t" << err << endl;
+    cout << "Wystapil blad (linia " << yylineno << "):\t" << err << endl;
     exit(1);
 }

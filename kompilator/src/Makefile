@@ -1,6 +1,6 @@
 gcc = g++ -std=c++17 
 
-all: compiler
+all:	compiler
 
 compiler: 
 	bison -d -o parser.c parser.y

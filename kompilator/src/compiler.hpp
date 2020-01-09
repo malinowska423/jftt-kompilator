@@ -14,3 +14,5 @@
 using namespace std;
 
 void test(char* test);
+
+void shout(int num);
