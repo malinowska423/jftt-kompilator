@@ -38,6 +38,9 @@ long int get_errors();
 long int get_loaded_index();
 
 
+var* set_temp_var(var*);
+var* set_temp_ptr(var*);
+long long get_var_index(var*);
 void cmd_assign(var* variable, var* expr, int lineno);
 void cmd_read(var* current, int lineno);
 void cmd_write(var* current, int lineno);
@@ -45,5 +48,8 @@ var *cmd_num(long long int value, int lineno);
 var *cmd_pid(string name, long long int index, int lineno);
 var *cmd_pid_arr(string name, string indexName, int lineno);
 void cmd_end();
+
+var* expr_val(var* value, int lineno);
+var* expr_plus(var* a, var* b, int lineno);
 
 void assign_to_p0(long long int value);

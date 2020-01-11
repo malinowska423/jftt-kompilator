@@ -1,7 +1,7 @@
 #include "symbol-table.hpp"
 
 symrec *sym_table = (symrec *)0;
-long int offset = 1;
+long long int offset = 1;
 
 symrec *putsym(string sym_name, long int lenght, long int startIndex, sym_type type)
 {
@@ -73,6 +73,10 @@ bool symbol_exists(string name) {
     } else {
         return true;
     }
+}
+
+long long int get_offset() {
+    return offset;
 }
 
 void printTable()

@@ -31,4 +31,5 @@ symrec* getsym(string name);
 void init_var(string name, int lineno);
 void init_array(string name, long int startIndex, long int endIndex, int lineno);
 bool symbol_exists(string name);
+long long int get_offset();
 void printTable();

@@ -77,7 +77,7 @@ command:
 
 expression:
 
-    value                       {$$ = $1;}
+    value                       {$$ = expr_val($1, yylineno);}
     | value PLUS value          {}
     | value MINUS value         {}
     | value TIMES value         {}
