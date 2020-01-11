@@ -1,6 +1,7 @@
 #include "symbol-table.hpp"
 
 symrec *sym_table = (symrec *)0;
+long int offset = 1;
 
 symrec *putsym(string sym_name, long int lenght, long int startIndex)
 {
@@ -12,6 +13,8 @@ symrec *putsym(string sym_name, long int lenght, long int startIndex)
     ptr->lenght = lenght;
     ptr->startIndex = startIndex;
     ptr->isInit = false;
+    ptr->storedAt = offset;
+    offset += lenght; 
     ptr->next = (struct symrec *)sym_table;
     sym_table = ptr;
     return ptr;
@@ -63,12 +66,22 @@ void init_array(string name, long int startIndex, long int endIndex, int lineno)
     }
 }
 
+bool symbol_exists(string name) {
+    symrec *s;
+    s = getsym(name);
+    if (s == 0) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 void printTable()
 {
     symrec *ptr;
     for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)
     {
-        cout << ptr->name << "(" << ptr->lenght << ")\t";
+        cout << ptr->name << "(" << ptr->storedAt << ")\t";
     }
     cout << endl;
 }

@@ -42,7 +42,7 @@ program:
 
     DECLARE declarations            {printTable();}
     _BEGIN commands                 {shout(1500);}
-    END                            {shout(1);}
+    END                            {cmd_end();}
     | _BEGIN commands END                                               {}
     ;
 
@@ -69,8 +69,8 @@ command:
     | DO commands WHILE condition ENDDO                               {}
     | FOR pidentifier FROM value TO value DO commands ENDFOR          {}
     | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {}
-    | READ identifier';'                                              {}
-    | WRITE value';'                                                  {}
+    | READ identifier';'                                              {cmd_read(yylineno);}
+    | WRITE value';'                                                  {cmd_write(yylineno);}
     ;
 
 expression:
@@ -101,9 +101,9 @@ value:
 
 identifier:
 
-    pidentifier                                 {shout(11);}
+    pidentifier                                 {cmd_pid(*$1,0, yylineno);}
     | pidentifier'('pidentifier')'              {shout(12);}
-    | pidentifier'('num')'                      {shout(13);}
+    | pidentifier'('num')'                      {cmd_pid(*$1, $3, yylineno);}
     ;
 
 %%
@@ -125,6 +125,7 @@ int main(int argv, char* argc[]) {
 
     if (get_errors() == 0) {
         cout << "Kompilacja zakonczona pomyslnie" << endl;
+        printCommands();
         return 0;
     } else {
         cout << "Kompilacja nieudana" << endl;
