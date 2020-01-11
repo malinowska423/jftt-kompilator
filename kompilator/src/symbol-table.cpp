@@ -3,18 +3,17 @@
 symrec *sym_table = (symrec *)0;
 long int offset = 1;
 
-symrec *putsym(string sym_name, long int lenght, long int startIndex)
+symrec *putsym(string sym_name, long int lenght, long int startIndex, sym_type type)
 {
     symrec *ptr;
     ptr = (symrec *)malloc(sizeof(symrec));
-    // ptr->name = (char *)malloc(strlen(sym_name) + 1);
-    // strcpy(ptr->name, sym_name);
     ptr->name = sym_name;
     ptr->lenght = lenght;
     ptr->startIndex = startIndex;
     ptr->isInit = false;
     ptr->storedAt = offset;
     offset += lenght; 
+    ptr->type = type;
     ptr->next = (struct symrec *)sym_table;
     sym_table = ptr;
     return ptr;
@@ -40,7 +39,7 @@ void init_var(string name, int lineno)
     s = getsym(name);
     if (s == 0)
     {
-        s = putsym(name, 1, 1);
+        s = putsym(name, 1, 1, VARIABLE);
     }
     else
     {
@@ -62,7 +61,7 @@ void init_array(string name, long int startIndex, long int endIndex, int lineno)
     }
     else
     {
-        s = putsym(name, (endIndex - (startIndex - 1)), startIndex);
+        s = putsym(name, (endIndex - (startIndex - 1)), startIndex, ARRAY);
     }
 }
 

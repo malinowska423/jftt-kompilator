@@ -8,6 +8,11 @@
 
 using namespace std;
 
+
+enum sym_type{
+    VARIABLE,
+    ARRAY
+};
 // linked list
 struct symrec
 {
@@ -16,6 +21,7 @@ struct symrec
     long int startIndex;
     bool isInit;
     long int storedAt;
+    sym_type type;
     struct symrec *next;
 };
 

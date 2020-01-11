@@ -4,12 +4,8 @@
 %{
 #include <iostream>
 #include <string>
-#include <vector>
-// #include <memory>
-// #include <cstring>
 #include "parser.h"
 
-const std::string errorMsg = "error: ";
 
 %}
 
@@ -63,13 +59,13 @@ PUNCT                   [\(\)\:\;,]
                         }
 {DIGIT}+                { yylval.num = std::stoll(yytext); return num; }
 {PUNCT}                 { return yytext[0]; }
-\[.*\]                  { /*ignore comments TODO: make comments better again*/ }
+\[.*\]                  ;
 "["                     { BEGIN(COMMENT); }
 <COMMENT>{
     [^\]]               ;
     "]"                 BEGIN(INITIAL);
 }
 
-[ \t\r\n]+                { /*ignore whitespaces*/ }
+[ \t\r\n]+              ;
 .                       { return ERROR; }
 %%

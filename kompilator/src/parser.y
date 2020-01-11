@@ -14,6 +14,7 @@ int yyerror(const string str);
 %union {
     std::string *pidentifier;
     long long int num;
+    struct variable * variable;
 }
 
 
@@ -28,8 +29,9 @@ int yyerror(const string str);
 %token <pidentifier> pidentifier
 %token <num> num
 //Types
-// %type <var> value
-// %type <id> identifier
+%type <variable> value
+%type <variable> identifier
+%type <variable> expression
 // %type <cond> condition;
 
 //Operators precedence
@@ -62,20 +64,20 @@ commands:
 
 command:
 
-    identifier ASSIGN expression';'                                   {shout(8);}
+    identifier ASSIGN expression';'                                   {cmd_assign($1, $3, yylineno);}
     | IF condition THEN commands ELSE commands ENDIF                  {}
     | IF condition THEN commands ENDIF                                {}
     | WHILE condition DO commands ENDWHILE                            {}
     | DO commands WHILE condition ENDDO                               {}
     | FOR pidentifier FROM value TO value DO commands ENDFOR          {}
     | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {}
-    | READ identifier';'                                              {cmd_read(yylineno);}
-    | WRITE value';'                                                  {cmd_write(yylineno);}
+    | READ identifier';'                                              {cmd_read($2, yylineno);}
+    | WRITE value';'                                                  {cmd_write($2, yylineno);}
     ;
 
 expression:
 
-    value                       {}
+    value                       {$$ = $1;}
     | value PLUS value          {}
     | value MINUS value         {}
     | value TIMES value         {}
@@ -95,15 +97,15 @@ condition:
 
 value:
 
-    num                         {shout(9);}
-    | identifier                {shout(10);}
+    num                         {$$ = cmd_num($1, yylineno);}
+    | identifier                {$$ = $1;}
     ;
 
 identifier:
 
-    pidentifier                                 {cmd_pid(*$1,0, yylineno);}
-    | pidentifier'('pidentifier')'              {shout(12);}
-    | pidentifier'('num')'                      {cmd_pid(*$1, $3, yylineno);}
+    pidentifier                                 {$$ = cmd_pid(*$1,1, yylineno);}
+    | pidentifier'('pidentifier')'              {$$ = cmd_pid_arr(*$1, *$3, yylineno);}
+    | pidentifier'('num')'                      {$$ = cmd_pid(*$1, $3, yylineno);}
     ;
 
 %%
