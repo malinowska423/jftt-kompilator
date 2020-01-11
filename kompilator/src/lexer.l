@@ -14,7 +14,7 @@ const std::string errorMsg = "error: ";
 %}
 
 IDENTIFIER              [_a-z]
-DIGIT                   [0-9]
+DIGIT                   [-]?([1-9][0-9]*|0)
 PUNCT                   [\(\)\:\;,]
 
 %x COMMENT

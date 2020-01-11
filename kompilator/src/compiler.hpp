@@ -1,3 +1,4 @@
+#pragma once
 
 #include <string.h>
 #include <iostream>
@@ -13,6 +14,8 @@
 
 using namespace std;
 
-void test(char* test);
 
 void shout(int num);
+
+void error(string msg, int lineno);
+long int get_errors();

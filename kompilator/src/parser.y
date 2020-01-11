@@ -1,5 +1,6 @@
 %{
 #include "compiler.hpp"
+#include "symbol-table.hpp"
 
 extern int yylex();
 extern int yylineno;
@@ -15,8 +16,7 @@ int yyerror(const string str);
     long long int num;
 }
 
-//Tokens
-%start program
+
 %token DECLARE _BEGIN END
 %token IF WHILE DO
 %token FOR 
@@ -40,16 +40,18 @@ int yyerror(const string str);
 %%
 program:
 
-    DECLARE declarations _BEGIN commands END                            {shout(1);}
+    DECLARE declarations            {printTable();}
+    _BEGIN commands                 {shout(1500);}
+    END                            {shout(1);}
     | _BEGIN commands END                                               {}
     ;
 
 declarations:
 
-    declarations',' pidentifier                                     {shout(2);}
-    | declarations',' pidentifier'('num':'num')'                      {shout(3);}
-    | pidentifier                                                   {}
-    | pidentifier'('num':'num')'                                    {shout(5);}
+    declarations',' pidentifier                                     {init_var(*$3, yylineno);}
+    | declarations',' pidentifier'('num':'num')'                    {init_array(*$3, $5, $7, yylineno);}
+    | pidentifier                                                   {init_var(*$1, yylineno);}
+    | pidentifier'('num':'num')'                                    {init_array(*$1, $3, $5, yylineno);}
     ;
 
 commands:
@@ -121,11 +123,17 @@ int main(int argv, char* argc[]) {
 
 	yyparse();
 
-    cout << "Kompilacja zakonczona pomyslnie" << endl;
-	return 0;
+    if (get_errors() == 0) {
+        cout << "Kompilacja zakonczona pomyslnie" << endl;
+        return 0;
+    } else {
+        cout << "Kompilacja nieudana" << endl;
+        return 1;
+    }
 }
 
 int yyerror(string err) {
-    cout << "Wystapil blad (linia " << yylineno << "):\t" << err << endl;
-    exit(1);
+    cerr << "Wystapil blad (linia " << yylineno << "):\t" << err << endl;
+    cout << "Kompilacja nieudana" << endl;
+    return 1;
 }
