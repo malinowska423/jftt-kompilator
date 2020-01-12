@@ -4,12 +4,9 @@
 long int errors = 0;
 vector<string> commands;
 vector<var *> temp;
-// var *current_var;
-
-void shout(int num)
-{
-    cout << "Im workin " << num << endl;
-}
+var *const_one = nullptr;
+char *output_filename;
+ofstream _file;
 
 void error(string msg, int lineno)
 {
@@ -180,6 +177,7 @@ var *cmd_pid_arr(string name, string indexName, int lineno)
     else if (!symbol_exists(indexName))
     {
         error("zmienna " + indexName + " nie zostala zainicjalizowana", lineno);
+        return nullptr;
     }
     else
     {
@@ -227,15 +225,173 @@ var *expr_val(var *value, int lineno)
 
 var *expr_plus(var *a, var *b, int lineno)
 {
+    return plus_minus(a, b, lineno, "ADD ");
+}
+
+var *expr_minus(var *a, var *b, int lineno)
+{
+    return plus_minus(a, b, lineno, "SUB ");
+}
+
+var *plus_minus(var *a, var *b, int lineno, string command)
+{
+    if (a->type == VAL)
+    {
+        if (b->type == VAL)
+        {
+            assign_to_p0(b->index);
+            var *temp;
+            temp = set_temp_var(nullptr);
+            assign_to_p0(a->index);
+            commands.push_back(command + to_string(temp->index));
+            temp->index = 0;
+            temp->type = VAL;
+            return temp;
+        }
+        else if (b->type == VAR)
+        {
+            assign_to_p0(a->index);
+            commands.push_back(command + to_string(get_var_index(b)));
+            a->index = 0;
+            return a;
+        }
+        else if (b->type == PTR)
+        {
+            var *ptr;
+            ptr = set_temp_ptr(b);
+            commands.push_back("LOADI " + to_string(ptr->index));
+            var *temp;
+            temp = set_temp_var(nullptr);
+            assign_to_p0(a->index);
+            commands.push_back(command + to_string(temp->index));
+            temp->index = 0;
+            temp->type = VAL;
+            return temp;
+        }
+    }
+    else if (a->type == VAR)
+    {
+        if (b->type == VAL)
+        {
+            assign_to_p0(b->index);
+            var *temp;
+            temp = set_temp_var(nullptr);
+            commands.push_back("LOAD " + to_string(get_var_index(a)));
+            commands.push_back(command + to_string(temp->index));
+            b->index = 0;
+            return b;
+        }
+        else if (b->type == VAR)
+        {
+            commands.push_back("LOAD " + to_string(get_var_index(a)));
+            commands.push_back(command + to_string(get_var_index(b)));
+            a->type = VAL;
+            a->index = 0;
+            return a;
+        }
+        else if (b->type == PTR)
+        {
+            var *ptr;
+            ptr = set_temp_ptr(b);
+            commands.push_back("LOADI " + to_string(ptr->index));
+            var *temp;
+            temp = set_temp_var(nullptr);
+            commands.push_back("LOAD " + to_string(get_var_index(a)));
+            commands.push_back(command + to_string(temp->index));
+            a->type = VAL;
+            a->index = 0;
+            return a;
+        }
+    }
+    else if (a->type == PTR)
+    {
+        if (b->type == VAL)
+        {
+            assign_to_p0(b->index);
+            var *temp;
+            temp = set_temp_var(nullptr);
+            var *ptr;
+            ptr = set_temp_ptr(a);
+            commands.push_back("LOADI " + to_string(ptr->index));
+            commands.push_back(command + to_string(temp->index));
+            temp->index = 0;
+            temp->type = VAL;
+            return temp;
+        }
+        else if (b->type == VAR)
+        {
+            var *ptr;
+            ptr = set_temp_ptr(a);
+            commands.push_back("LOADI " + to_string(ptr->index));
+            commands.push_back(command + to_string(get_var_index(b)));
+            b->type = VAL;
+            b->index = 0;
+            return b;
+        }
+        else if (b->type == PTR)
+        {
+            var *ptrb;
+            ptrb = set_temp_ptr(b);
+            commands.push_back("LOADI " + to_string(ptrb->index));
+            var *temp;
+            temp = set_temp_var(nullptr);
+            var *ptra;
+            ptra = set_temp_ptr(a);
+            commands.push_back("LOADI " + to_string(ptra->index));
+            commands.push_back(command + to_string(temp->index));
+            temp->index = 0;
+            temp->type = VAL;
+            return temp;
+        }
+    }
+    error("nieprawidlowa zmienna", lineno);
+    return nullptr;
 }
 
 void assign_to_p0(long long int value)
 {
     commands.push_back("SUB 0");
-    for (long long i = 0; i < value; i++)
+    if (value != 0)
     {
-        commands.push_back("INC");
+        if (const_one == nullptr)
+        {
+            commands.push_back("INC");
+            const_one = set_temp_var(const_one);
+            commands.push_back("DEC");
+        }
+
+        string x = dec_to_bin(value > 0 ? value * (-1) : value);
+        for (unsigned long long i = 0; i < x.length() - 1; i++)
+        {
+            if (x.at(i) == '1')
+            {
+                commands.push_back("INC");
+            }
+            commands.push_back("SHIFT " + to_string(const_one->index));
+        }
+        if (x.at(x.length() - 1) == '1')
+        {
+            commands.push_back("INC");
+        }
+        if (value < 0)
+        {
+            var *temp;
+            temp = set_temp_var(nullptr);
+            commands.push_back("SUB " + to_string(temp->index));
+            commands.push_back("SUB " + to_string(temp->index));
+        }
     }
+}
+
+string dec_to_bin(long long int num)
+{
+    string bin;
+    while (num != 0)
+    {
+        bin = (num % 2 == 0 ? "0" : "1") + bin;
+        num /= 2;
+    }
+    return bin;
 }
 
 var *set_temp_var(var *variable)
@@ -267,13 +423,28 @@ long long int get_var_index(var *current)
     return getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
 }
 
-void print_to_file(char *out)
+
+void set_output_filename(char *filename)
 {
-    ofstream file;
-    file.open(out);
-    for (int cmd = 0; cmd < commands.size(); cmd++)
+    output_filename = filename;
+}
+
+void open_file()
+{
+    _file.open(output_filename);
+}
+
+void flush_to_file()
+{
+    for (unsigned int cmd = 0; cmd < commands.size(); cmd++)
     {
-        file << commands.at(cmd) << endl;
+        _file << commands.at(cmd) << endl;
     }
-    file.close();
+    commands.clear();
+}
+
+void close_file()
+{
+    flush_to_file();
+    _file.close();
 }

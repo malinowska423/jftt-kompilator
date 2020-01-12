@@ -42,9 +42,9 @@ int yyerror(const string str);
 %%
 program:
 
-    DECLARE declarations            {printTable();}
-    _BEGIN commands                 {shout(1500);}
-    END                            {cmd_end();}
+    DECLARE declarations            {open_file();}
+    _BEGIN commands                 {}
+    END                            {cmd_end();close_file();}
     | _BEGIN commands END                                               {}
     ;
 
@@ -58,8 +58,8 @@ declarations:
 
 commands:
 
-    commands command                                                    {shout(6); }
-    | command                                                           {shout(7); }
+    commands command                                                    {flush_to_file();}
+    | command                                                           {flush_to_file();}
     ;
 
 command:
@@ -78,8 +78,8 @@ command:
 expression:
 
     value                       {$$ = expr_val($1, yylineno);}
-    | value PLUS value          {}
-    | value MINUS value         {}
+    | value PLUS value          {$$ = expr_plus($1, $3, yylineno);}
+    | value MINUS value         {$$ = expr_minus($1, $3, yylineno);}
     | value TIMES value         {}
     | value DIV value           {}
     | value MOD value           {}
@@ -122,12 +122,12 @@ int main(int argv, char* argc[]) {
         cout << "Plik nie istnieje" << endl;
         return 1;
     }
+    set_output_filename(argc[2]);
 
 	yyparse();
 
     if (get_errors() == 0) {
         cout << "Kompilacja zakonczona pomyslnie" << endl;
-        print_to_file(argc[2]);
         return 0;
     } else {
         cout << "Kompilacja nieudana" << endl;
