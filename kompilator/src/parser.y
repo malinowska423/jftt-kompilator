@@ -112,7 +112,7 @@ identifier:
 
 
 int main(int argv, char* argc[]) {
-    if( argv != 2 ) {
+    if( argv != 3 ) {
         cerr << "Prawidlowe wywolanie: kompilator plik_wejsciowy plik_wyjsciowy" << endl;
         return 1;
     }
@@ -127,7 +127,7 @@ int main(int argv, char* argc[]) {
 
     if (get_errors() == 0) {
         cout << "Kompilacja zakonczona pomyslnie" << endl;
-        printCommands();
+        print_to_file(argc[2]);
         return 0;
     } else {
         cout << "Kompilacja nieudana" << endl;
@@ -138,5 +138,5 @@ int main(int argv, char* argc[]) {
 int yyerror(string err) {
     cerr << "Wystapil blad (linia " << yylineno << "):\t" << err << endl;
     cout << "Kompilacja nieudana" << endl;
-    return 1;
+    exit(1);
 }

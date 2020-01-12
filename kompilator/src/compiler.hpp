@@ -31,7 +31,7 @@ struct variable
 typedef struct variable var;
 
 void shout(int num);
-void printCommands();
+void print_to_file(char*);
 
 void error(string msg, int lineno);
 long int get_errors();

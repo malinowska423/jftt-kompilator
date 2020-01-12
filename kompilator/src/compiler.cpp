@@ -2,33 +2,13 @@
 #include "symbol-table.hpp"
 
 long int errors = 0;
-long int loadedIndex = 0;
 vector<string> commands;
 vector<var *> temp;
 // var *current_var;
 
-var *set_temp_ptr(var *current)
-{
-    assign_to_p0(current->index);
-    symrec *s;
-    s = getsym(current->indexName);
-    commands.push_back("ADD " + to_string(s->storedAt) + "\n");
-    return set_temp_var(nullptr);
-}
-
 void shout(int num)
 {
     cout << "Im workin " << num << endl;
-}
-
-void printCommands()
-{
-    cout << "Komendy: \n";
-    for (int i = 0; i < commands.size(); i++)
-    {
-        cout << commands.at(i);
-    }
-    cout << endl;
 }
 
 void error(string msg, int lineno)
@@ -47,43 +27,50 @@ long int get_errors()
     return errors;
 }
 
-long int get_loaded_index()
-{
-    return loadedIndex;
-}
-
 void cmd_assign(var *variable, var *expr, int lineno)
 {
-    cout << variable->name << " assign " << expr->type << endl;
     long long int i;
     switch (variable->type)
     {
     case VAR:
     {
-        i = getsym(variable->name)->storedAt + variable->index - getsym(variable->name)->startIndex;
-        commands.push_back("STORE " + to_string(i) + "\n");
+        if (expr->type == PTR)
+        {
+            i = set_temp_ptr(expr)->index;
+            commands.push_back("LOADI " + to_string(i));
+        }
+        else
+        {
+            if (expr->index != 0)
+            {
+                i = expr->index;
+                commands.push_back("LOAD " + to_string(i));
+            }
+            i = get_var_index(variable);
+        }
+        commands.push_back("STORE " + to_string(i));
     }
     break;
     case PTR:
     {
-        assign_to_p0(variable->index);
-        loadedIndex = -1;
-        symrec *s;
-        s = getsym(variable->indexName);
-        commands.push_back("ADD " + to_string(s->storedAt) + "\n");
-        var *temp = set_temp_var(nullptr);
+        if (expr->index == 0)
+        {
+            expr = set_temp_var(expr);
+        }
+        var *temp;
+        temp = set_temp_ptr(variable);
         if (expr->type == PTR)
         {
-            long long i = set_temp_ptr(expr)->index;
-            commands.push_back("LOADI " + to_string(i) + "\n");
+            i = set_temp_ptr(expr)->index;
+            commands.push_back("LOADI " + to_string(i));
         }
         else
         {
-            long long i = expr->index;
-            commands.push_back("LOAD " + to_string(i) + "\n");
+            i = expr->index;
+            commands.push_back("LOAD " + to_string(i));
         }
-        long long i = temp->index;
-        commands.push_back("STOREI " + to_string(i) + "\n");
+        i = temp->index;
+        commands.push_back("STOREI " + to_string(i));
     }
     break;
     default:
@@ -97,15 +84,14 @@ void cmd_read(var *current, int lineno)
     if (current->type == VAR)
     {
         long long int i = getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
-        commands.push_back("GET\n");
-        loadedIndex = i;
-        commands.push_back("STORE " + to_string(i) + "\n");
+        commands.push_back("GET");
+        commands.push_back("STORE " + to_string(i));
     }
     else if (current->type == PTR)
     {
         long long i = set_temp_ptr(current)->index;
-        commands.push_back("GET\n");
-        commands.push_back("STOREI " + to_string(i) + "\n");
+        commands.push_back("GET");
+        commands.push_back("STOREI " + to_string(i));
     }
     else
     {
@@ -118,33 +104,29 @@ void cmd_write(var *current, int lineno)
     switch (current->type)
     {
     case VAL:
-        assign_to_p0(current->index);
-        break;
+    {
+        long long int i = current->index;
+        commands.push_back("LOAD " + to_string(i));
+    }
+    break;
     case VAR:
     {
-        long int i = getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
-        if (loadedIndex != i)
-        {
-            commands.push_back("LOAD " + to_string(i) + "\n");
-            loadedIndex = i;
-        }
+        long long int i = get_var_index(current);
+        commands.push_back("LOAD " + to_string(i));
     }
     break;
     case PTR:
     {
-        assign_to_p0(current->index);
-        loadedIndex = -1;
-        symrec *s;
-        s = getsym(current->indexName);
-        commands.push_back("ADD " + to_string(s->storedAt) + "\n");
-        commands.push_back("LOADI 0\n");
+        var *temp = set_temp_ptr(current);
+        long long int i = temp->index;
+        commands.push_back("LOADI " + to_string(i));
     }
     break;
     default:
         error("nieprawidlowa zmienna", lineno);
         break;
     }
-    commands.push_back("PUT\n");
+    commands.push_back("PUT");
 }
 
 var *cmd_num(long long int value, int lineno)
@@ -234,7 +216,6 @@ var *expr_val(var *value, int lineno)
     break;
     case PTR:
     {
-
     }
     break;
     default:
@@ -250,10 +231,10 @@ var *expr_plus(var *a, var *b, int lineno)
 
 void assign_to_p0(long long int value)
 {
-    commands.push_back("SUB 0\n");
+    commands.push_back("SUB 0");
     for (long long i = 0; i < value; i++)
     {
-        commands.push_back("INC\n");
+        commands.push_back("INC");
     }
 }
 
@@ -268,8 +249,17 @@ var *set_temp_var(var *variable)
     long long int i = get_offset() + temp.size();
     variable->index = i;
     temp.push_back(variable);
-    commands.push_back("STORE " + to_string(i) + "\n");
+    commands.push_back("STORE " + to_string(i));
     return variable;
+}
+
+var *set_temp_ptr(var *current)
+{
+    assign_to_p0(current->index);
+    symrec *s;
+    s = getsym(current->indexName);
+    commands.push_back("ADD " + to_string(s->storedAt));
+    return set_temp_var(nullptr);
 }
 
 long long int get_var_index(var *current)
@@ -277,3 +267,13 @@ long long int get_var_index(var *current)
     return getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
 }
 
+void print_to_file(char *out)
+{
+    ofstream file;
+    file.open(out);
+    for (int cmd = 0; cmd < commands.size(); cmd++)
+    {
+        file << commands.at(cmd) << endl;
+    }
+    file.close();
+}
