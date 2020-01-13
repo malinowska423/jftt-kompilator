@@ -62,6 +62,7 @@ vecS *pass_cmd(vecS *, vecS *);
 
 vecS *cmd_assign(var *variable, var *expr, int lineno);
 vecS *cmd_if(cond *, vecS *, int);
+vecS *cmd_if_else(cond *, vecS *, vecS *, int);
 vecS *cmd_read(var *current, int lineno);
 vecS *cmd_write(var *current, int lineno);
 
@@ -86,4 +87,4 @@ var *set_temp_var(var *);
 var *set_temp_ptr(var *);
 long long get_var_index(var *);
 string dec_to_bin(long long int);
-void check_jumps(vecS*);
+void check_jumps(vecS *);

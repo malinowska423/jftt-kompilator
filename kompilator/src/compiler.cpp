@@ -110,38 +110,39 @@ vecS *cmd_if(cond *condition, vecS *_commands, int lineno)
     _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
     _ifCom->push_back("LOAD " + to_string(condition->index));
     long long int cond_size = _ifCom->size();
-    switch(condition->type) {
-        case JEQ:
-        {
-            to_change.push_back(_ifCom->size());
-            _ifCom->push_back("JPOS ");
-            to_change.push_back(_ifCom->size());
-            _ifCom->push_back("JNEG ");
-        }
+    switch (condition->type)
+    {
+    case JEQ:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JPOS ");
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JNEG ");
+    }
+    break;
+    case JNEQ:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JZERO ");
+    }
+    break;
+    case JGE:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JNEG ");
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JZERO ");
+    }
+    break;
+    case JGEQ:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JNEG ");
+    }
+    break;
+    default:
+        error("nieprawidlowa konstrukcja warunku", lineno);
         break;
-        case JNEQ:
-        {
-            to_change.push_back(_ifCom->size());
-            _ifCom->push_back("JZERO ");
-        }
-        break;
-        case JGE:
-        {
-            to_change.push_back(_ifCom->size());
-            _ifCom->push_back("JNEG ");
-            to_change.push_back(_ifCom->size());
-            _ifCom->push_back("JZERO ");
-        }
-        break;
-        case JGEQ:
-        {
-            to_change.push_back(_ifCom->size());
-            _ifCom->push_back("JNEG ");
-        }
-        break;
-        default:
-            error("nieprawidlowa konstrukcja warunku", lineno);
-            break;
     }
     _ifCom->insert(_ifCom->end(), _commands->begin(), _commands->end());
     _commands->clear();
@@ -149,9 +150,64 @@ vecS *cmd_if(cond *condition, vecS *_commands, int lineno)
     for (unsigned int i = 0; i < to_change.size(); i++)
     {
         _ifCom->at(to_change.at(i)) += to_string(size);
-        size--; 
+        size--;
     }
-    
+
+    return _ifCom;
+}
+
+vecS *cmd_if_else(cond *condition, vecS *if_commands, vecS *else_commands, int lineno)
+{
+    vecS *_ifCom = new vecS();
+    vector<int> to_change;
+    _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
+    _ifCom->push_back("LOAD " + to_string(condition->index));
+    long long int cond_size = _ifCom->size();
+    switch (condition->type)
+    {
+    case JEQ:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JPOS ");
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JNEG ");
+    }
+    break;
+    case JNEQ:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JZERO ");
+    }
+    break;
+    case JGE:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JNEG ");
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JZERO ");
+    }
+    break;
+    case JGEQ:
+    {
+        to_change.push_back(_ifCom->size());
+        _ifCom->push_back("JNEG ");
+    }
+    break;
+    default:
+        error("nieprawidlowa konstrukcja warunku", lineno);
+        break;
+    }
+    _ifCom->insert(_ifCom->end(), if_commands->begin(), if_commands->end());
+    if_commands->clear();
+    long long int size = _ifCom->size() - cond_size + 1;
+    for (unsigned int i = 0; i < to_change.size(); i++)
+    {
+        _ifCom->at(to_change.at(i)) += to_string(size);
+        size--;
+    }
+    size = else_commands->size();
+    _ifCom->push_back("JUMP " + to_string(size));
+    _ifCom->insert(_ifCom->end(), else_commands->begin(), else_commands->end());
     return _ifCom;
 }
 
@@ -542,20 +598,20 @@ long long int get_var_index(var *current)
     return getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
 }
 
-void check_jumps(vecS* _commands) {
+void check_jumps(vecS *_commands)
+{
     for (unsigned long long int i = 0; i < _commands->size(); i++)
     {
         string label = _commands->at(i);
-        bool jump_found = label.find("JPOS") != string::npos || label.find("JZERO") != string::npos || label.find("JNEG") != string::npos;
-        if (jump_found) {
+        bool jump_found = label.find("JPOS") != string::npos || label.find("JZERO") != string::npos || label.find("JNEG") != string::npos || label.find("JUMP") != string::npos;
+        if (jump_found)
+        {
             string cmd = label.substr(0, label.find(" "));
             long long int k = stoll(label.substr(label.rfind(" ")));
             k += i;
             _commands->at(i) = cmd + " " + to_string(k);
         }
     }
-    
-
 }
 
 void set_output_filename(char *filename)
