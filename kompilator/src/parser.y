@@ -6,17 +6,16 @@ extern int yylex();
 extern int yylineno;
 extern FILE *yyin;
 int yyerror(const string str);
-%}
 
-// %define parse.error verbose
-// %expect 0
+%}
 
 %union {
     std::string *pidentifier;
     long long int num;
-    struct variable * variable;
+    struct variable *variable;
+    struct condition *cond;
+    std::vector<std::string> *command;
 }
-
 
 %token DECLARE _BEGIN END
 %token IF WHILE DO
@@ -28,11 +27,14 @@ int yyerror(const string str);
 %token ERROR
 %token <pidentifier> pidentifier
 %token <num> num
+
 //Types
 %type <variable> value
 %type <variable> identifier
 %type <variable> expression
-// %type <cond> condition;
+%type <cond> condition
+%type <command> command
+%type <command> commands
 
 //Operators precedence
 %left PLUS MINUS
@@ -42,9 +44,7 @@ int yyerror(const string str);
 %%
 program:
 
-    DECLARE declarations            {open_file();}
-    _BEGIN commands                 {}
-    END                            {cmd_end();close_file();}
+    DECLARE declarations _BEGIN commands END                         {shout(300);flush_to_file(*$4);cmd_end();close_file();}
     | _BEGIN commands END                                               {}
     ;
 
@@ -58,21 +58,21 @@ declarations:
 
 commands:
 
-    commands command                                                    {flush_to_file();}
-    | command                                                           {flush_to_file();}
+    commands command                                                    {shout(2);$$ = pass_cmd($1, $2);}
+    | command                                                           {shout(3);$$ = pass_cmd($1);}
     ;
 
 command:
 
-    identifier ASSIGN expression';'                                   {cmd_assign($1, $3, yylineno);}
-    | IF condition THEN commands ELSE commands ENDIF                  {}
-    | IF condition THEN commands ENDIF                                {}
-    | WHILE condition DO commands ENDWHILE                            {}
-    | DO commands WHILE condition ENDDO                               {}
-    | FOR pidentifier FROM value TO value DO commands ENDFOR          {}
-    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {}
-    | READ identifier';'                                              {cmd_read($2, yylineno);}
-    | WRITE value';'                                                  {cmd_write($2, yylineno);}
+    identifier ASSIGN expression';'                                   {shout(4);$$ = cmd_assign($1, $3, yylineno);}
+    | IF condition THEN commands ELSE commands ENDIF                  {shout(5);}
+    | IF condition THEN commands ENDIF                                {shout(6);$$ = cmd_if($2, $4, yylineno);}
+    | WHILE condition DO commands ENDWHILE                            {shout(7);}
+    | DO commands WHILE condition ENDDO                               {shout(8);}
+    | FOR pidentifier FROM value TO value DO commands ENDFOR          {shout(9);}
+    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {shout(10);}
+    | READ identifier';'                                              {shout(30);$$ = cmd_read($2, yylineno);}
+    | WRITE value';'                                                  {shout(304);$$ = cmd_write($2, yylineno);}
     ;
 
 expression:
@@ -87,7 +87,7 @@ expression:
 
 condition:
 
-    value EQ value              {}
+    value EQ value              {$$ = cond_eq($1, $3, yylineno);}
     | value NEQ value           {}
     | value LE value            {}
     | value GE value            {}
@@ -123,6 +123,7 @@ int main(int argv, char* argc[]) {
         return 1;
     }
     set_output_filename(argc[2]);
+    open_file();
 
 	yyparse();
 

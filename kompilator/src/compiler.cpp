@@ -8,6 +8,11 @@ var *const_one = nullptr;
 char *output_filename;
 ofstream _file;
 
+void shout(int nmbr)
+{
+    cout << "Hi " << nmbr << endl;
+}
+
 void error(string msg, int lineno)
 {
     if (errors == 0)
@@ -24,8 +29,21 @@ long int get_errors()
     return errors;
 }
 
-void cmd_assign(var *variable, var *expr, int lineno)
+vecS* pass_cmd(vecS* _commands) {
+    return _commands;
+}
+
+vecS* pass_cmd(vecS* _commands, vecS* _command) {
+    _commands->insert(_commands->end(), _command->begin(), _command->end());
+    _command->clear();
+    return _commands;
+}
+
+vecS* cmd_assign(var *variable, var *expr, int lineno)
 {
+    vecS * _commands = new vecS();
+    _commands->insert(_commands->end(), commands.begin(), commands.end());
+    commands.clear();
     long long int i;
     switch (variable->type)
     {
@@ -34,18 +52,20 @@ void cmd_assign(var *variable, var *expr, int lineno)
         if (expr->type == PTR)
         {
             i = set_temp_ptr(expr)->index;
-            commands.push_back("LOADI " + to_string(i));
+            _commands->insert(_commands->end(), commands.begin(), commands.end());
+            commands.clear();
+            _commands->push_back("LOADI " + to_string(i));
         }
         else
         {
             if (expr->index != 0)
             {
                 i = expr->index;
-                commands.push_back("LOAD " + to_string(i));
+                _commands->push_back("LOAD " + to_string(i));
             }
             i = get_var_index(variable);
         }
-        commands.push_back("STORE " + to_string(i));
+        _commands->push_back("STORE " + to_string(i));
     }
     break;
     case PTR:
@@ -56,74 +76,98 @@ void cmd_assign(var *variable, var *expr, int lineno)
         }
         var *temp;
         temp = set_temp_ptr(variable);
+        _commands->insert(_commands->end(), commands.begin(), commands.end());
+        commands.clear();
         if (expr->type == PTR)
         {
             i = set_temp_ptr(expr)->index;
-            commands.push_back("LOADI " + to_string(i));
+            _commands->insert(_commands->end(), commands.begin(), commands.end());
+            commands.clear();
+            _commands->push_back("LOADI " + to_string(i));
         }
         else
         {
             i = expr->index;
-            commands.push_back("LOAD " + to_string(i));
+            _commands->push_back("LOAD " + to_string(i));
         }
         i = temp->index;
-        commands.push_back("STOREI " + to_string(i));
+        _commands->push_back("STOREI " + to_string(i));
     }
     break;
     default:
         error("nieprawidlowa zmienna", lineno);
         break;
     }
+    return _commands;
 }
 
-void cmd_read(var *current, int lineno)
+vecS* cmd_if(cond *condition, vecS* _commands, int lineno)
 {
+    vecS* _ifCom = new vecS();
+    _ifCom->push_back("ZACZYNAM IFA");
+    _ifCom->insert(_ifCom->end(), _commands->begin(), _commands->end());
+    _commands->clear();
+    _ifCom->push_back("KONIEC IFA");
+    return _ifCom;
+
+}
+
+vecS* cmd_read(var *current, int lineno)
+{
+    vecS * _commands = new vecS();
     if (current->type == VAR)
     {
         long long int i = getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
-        commands.push_back("GET");
-        commands.push_back("STORE " + to_string(i));
+        _commands->push_back("GET");
+        _commands->push_back("STORE " + to_string(i));
     }
     else if (current->type == PTR)
     {
         long long i = set_temp_ptr(current)->index;
-        commands.push_back("GET");
-        commands.push_back("STOREI " + to_string(i));
+        _commands->insert(_commands->end(), commands.begin(), commands.end());
+        commands.clear();
+        _commands->push_back("GET");
+        _commands->push_back("STOREI " + to_string(i));
     }
     else
     {
         error("bledna zmienna", lineno);
     }
+    return _commands;
 }
 
-void cmd_write(var *current, int lineno)
+vecS* cmd_write(var *current, int lineno)
 {
+    vecS * _commands = new vecS();
     switch (current->type)
     {
     case VAL:
     {
         long long int i = current->index;
-        commands.push_back("LOAD " + to_string(i));
+        _commands->push_back("LOAD " + to_string(i));
     }
     break;
     case VAR:
     {
         long long int i = get_var_index(current);
-        commands.push_back("LOAD " + to_string(i));
+        _commands->push_back("LOAD " + to_string(i));
     }
     break;
     case PTR:
     {
         var *temp = set_temp_ptr(current);
+        _commands->insert(_commands->end(), commands.begin(), commands.end());
+        commands.clear();
         long long int i = temp->index;
-        commands.push_back("LOADI " + to_string(i));
+        _commands->push_back("LOADI " + to_string(i));
     }
     break;
     default:
         error("nieprawidlowa zmienna", lineno);
         break;
     }
-    commands.push_back("PUT");
+    _commands->push_back("PUT");
+    return _commands;
 }
 
 var *cmd_num(long long int value, int lineno)
@@ -348,6 +392,18 @@ var *plus_minus(var *a, var *b, int lineno, string command)
     return nullptr;
 }
 
+cond *cond_eq(var *a, var *b, int lineno)
+{
+    var *temp;
+    temp = plus_minus(a, b, lineno, "SUB ");
+    temp = set_temp_var(nullptr);
+    cond *condition;
+    condition = (cond *)malloc(sizeof(cond));
+    condition->index = temp->index;
+    condition->type = ZERO;
+    return condition;
+}
+
 void assign_to_p0(long long int value)
 {
     commands.push_back("SUB 0");
@@ -423,7 +479,6 @@ long long int get_var_index(var *current)
     return getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
 }
 
-
 void set_output_filename(char *filename)
 {
     output_filename = filename;
@@ -434,17 +489,17 @@ void open_file()
     _file.open(output_filename);
 }
 
-void flush_to_file()
+void flush_to_file(vecS _commands)
 {
-    for (unsigned int cmd = 0; cmd < commands.size(); cmd++)
+    for (unsigned int cmd = 0; cmd < _commands.size(); cmd++)
     {
-        _file << commands.at(cmd) << endl;
+        _file << _commands.at(cmd) << endl;
     }
-    commands.clear();
+    _commands.clear();
 }
 
 void close_file()
 {
-    flush_to_file();
+    flush_to_file(commands);
     _file.close();
 }

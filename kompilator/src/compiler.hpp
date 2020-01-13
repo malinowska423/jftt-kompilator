@@ -30,19 +30,41 @@ struct variable
 };
 typedef struct variable var;
 
-void flush_to_file();
+enum cond_type {
+    POS,
+    ZERO,
+    NEG
+};
+
+typedef vector<string> vecS;
+struct condition
+{
+    long long int index;
+    cond_type type;
+    vecS commands;
+};
+typedef struct condition cond;
+
+
+void flush_to_file(vecS);
 void set_output_filename(char*);
 void open_file();
 void close_file();
+void shout(int);
 
 void error(string msg, int lineno);
 long int get_errors();
 long int get_loaded_index();
 
+vecS* pass_cmd(vecS*);
+vecS* pass_cmd(vecS*, vecS*);
 
-void cmd_assign(var* variable, var* expr, int lineno);
-void cmd_read(var* current, int lineno);
-void cmd_write(var* current, int lineno);
+
+vecS* cmd_assign(var* variable, var* expr, int lineno);
+vecS* cmd_if(cond*, vecS*, int);
+vecS* cmd_read(var* current, int lineno);
+vecS* cmd_write(var* current, int lineno);
+
 var *cmd_num(long long int value, int lineno);
 var *cmd_pid(string name, long long int index, int lineno);
 var *cmd_pid_arr(string name, string indexName, int lineno);
@@ -52,6 +74,10 @@ var* expr_val(var* value, int lineno);
 var* expr_plus(var* a, var* b, int lineno);
 var* expr_minus(var* a, var* b, int lineno);
 var* plus_minus(var* a, var* b, int lineno, string command);
+
+
+cond* cond_eq(var*, var*, int);
+
 
 void assign_to_p0(long long int value);
 var* set_temp_var(var*);
