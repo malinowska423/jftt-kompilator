@@ -29,19 +29,21 @@ long int get_errors()
     return errors;
 }
 
-vecS* pass_cmd(vecS* _commands) {
+vecS *pass_cmd(vecS *_commands)
+{
     return _commands;
 }
 
-vecS* pass_cmd(vecS* _commands, vecS* _command) {
+vecS *pass_cmd(vecS *_commands, vecS *_command)
+{
     _commands->insert(_commands->end(), _command->begin(), _command->end());
     _command->clear();
     return _commands;
 }
 
-vecS* cmd_assign(var *variable, var *expr, int lineno)
+vecS *cmd_assign(var *variable, var *expr, int lineno)
 {
-    vecS * _commands = new vecS();
+    vecS *_commands = new vecS();
     _commands->insert(_commands->end(), commands.begin(), commands.end());
     commands.clear();
     long long int i;
@@ -101,20 +103,21 @@ vecS* cmd_assign(var *variable, var *expr, int lineno)
     return _commands;
 }
 
-vecS* cmd_if(cond *condition, vecS* _commands, int lineno)
+vecS *cmd_if(cond *condition, vecS *_commands, int lineno)
 {
-    vecS* _ifCom = new vecS();
+    vecS *_ifCom = new vecS();
     _ifCom->push_back("ZACZYNAM IFA");
+    _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
+    _ifCom->push_back("IFFFFFFFFFFFF COND OVER");
     _ifCom->insert(_ifCom->end(), _commands->begin(), _commands->end());
     _commands->clear();
     _ifCom->push_back("KONIEC IFA");
     return _ifCom;
-
 }
 
-vecS* cmd_read(var *current, int lineno)
+vecS *cmd_read(var *current, int lineno)
 {
-    vecS * _commands = new vecS();
+    vecS *_commands = new vecS();
     if (current->type == VAR)
     {
         long long int i = getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
@@ -136,9 +139,9 @@ vecS* cmd_read(var *current, int lineno)
     return _commands;
 }
 
-vecS* cmd_write(var *current, int lineno)
+vecS *cmd_write(var *current, int lineno)
 {
-    vecS * _commands = new vecS();
+    vecS *_commands = new vecS();
     switch (current->type)
     {
     case VAL:
@@ -394,13 +397,33 @@ var *plus_minus(var *a, var *b, int lineno, string command)
 
 cond *cond_eq(var *a, var *b, int lineno)
 {
+    return set_condtion(a, b, lineno, EQ);
+}
+
+cond *cond_neq(var *a, var *b, int lineno)
+{
+    return set_condtion(a, b, lineno, NEQ);
+}
+cond *cond_ge(var *a, var *b, int lineno)
+{
+    return set_condtion(a, b, lineno, GE);
+}
+cond *cond_geq(var *a, var *b, int lineno)
+{
+    return set_condtion(a, b, lineno, GEQ);
+}
+
+cond *set_condtion(var *a, var *b, int lineno, cond_type type)
+{
     var *temp;
     temp = plus_minus(a, b, lineno, "SUB ");
     temp = set_temp_var(nullptr);
     cond *condition;
     condition = (cond *)malloc(sizeof(cond));
     condition->index = temp->index;
-    condition->type = ZERO;
+    condition->type = type;
+    condition->commands.insert(condition->commands.end(), commands.begin(), commands.end());
+    commands.clear();
     return condition;
 }
 

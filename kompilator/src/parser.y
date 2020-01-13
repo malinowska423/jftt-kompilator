@@ -88,11 +88,11 @@ expression:
 condition:
 
     value EQ value              {$$ = cond_eq($1, $3, yylineno);}
-    | value NEQ value           {}
-    | value LE value            {}
-    | value GE value            {}
-    | value LEQ value           {}
-    | value GEQ value           {}
+    | value NEQ value           {$$ = cond_neq($1, $3, yylineno);}
+    | value LE value            {$$ = cond_ge($3, $1, yylineno);}
+    | value GE value            {$$ = cond_ge($1, $3, yylineno);}
+    | value LEQ value           {$$ = cond_geq($3, $1, yylineno);}
+    | value GEQ value           {$$ = cond_geq($1, $3, yylineno);}
     ;
 
 value:
