@@ -272,6 +272,49 @@ vecS *cmd_while(cond *condition, vecS *_commands, int lineno)
     return _ifCom;
 }
 
+
+vecS *cmd_do_while(cond *condition, vecS *_commands, int lineno)
+{
+    vecS *_ifCom = new vecS();
+    _ifCom->insert(_ifCom->end(), _commands->begin(), _commands->end());
+    _commands->clear();
+
+    condition = change_condition(condition, lineno);
+    _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
+    condition->commands.clear();
+    long long int size = _ifCom->size() * (-1);
+    string idx = to_string(size);
+    switch (condition->type)
+    {
+    case JEQ:
+    {
+        _ifCom->push_back("JZERO " + idx);
+    }
+    break;
+    case JNEQ:
+    {
+        _ifCom->push_back("JPOS " + idx);
+        _ifCom->push_back("JNEG " + idx);
+    }
+    break;
+    case JGE:
+    {
+        _ifCom->push_back("JPOS " + idx);
+    }
+    break;
+    case JGEQ:
+    {
+        _ifCom->push_back("JPOS " + idx);
+        _ifCom->push_back("JZERO " + idx);
+    }
+    break;
+    default:
+        error("nieprawidlowa konstrukcja warunku", lineno);
+        break;
+    }
+    return _ifCom;
+}
+
 vecS *cmd_read(var *current, int lineno)
 {
     vecS *_commands = new vecS();
@@ -574,7 +617,6 @@ cond *set_condition(var *a, var *b, int lineno, cond_type type)
 {
     cond *condition;
     condition = (cond *)malloc(sizeof(cond));
-    cout << "SET COND " << a->type << ":" << a->index << "\t" << b->type << ":" << b->index << endl;
     condition->sourceA = a;
     condition->sourceB = b;
     var *temp;
@@ -587,20 +629,17 @@ cond *set_condition(var *a, var *b, int lineno, cond_type type)
     condition->commands.insert(condition->commands.end(), commands.begin(), commands.end());
     commands.clear();
     condition->commands.pop_back();
-    cout << "SET COND " << a->type << ":" << a->index << "\t" << b->type << ":" << b->index << endl;
     return condition;
 }
 
 cond *change_condition(cond *condition, int lineno)
 {
-    cout << "CHANGE COND " << condition->sourceA->type << ":" << condition->sourceA->index << "\t" << condition->sourceB->type << ":" << condition->sourceB->index << endl;
     var tempA = *condition->sourceA;
     var tempB = *condition->sourceB;
     plus_minus(&tempA, &tempB, lineno, "SUB ");
     condition->commands.clear();
     condition->commands.insert(condition->commands.end(), commands.begin(), commands.end());
     commands.clear();
-    cout << "CHANGE COND " << condition->sourceA->type << ":" << condition->sourceA->index << "\t" << condition->sourceB->type << ":" << condition->sourceB->index << endl;
     return condition;
 }
 

@@ -66,6 +66,7 @@ vecS *cmd_assign(var *variable, var *expr, int lineno);
 vecS *cmd_if(cond *, vecS *, int);
 vecS *cmd_if_else(cond *, vecS *, vecS *, int);
 vecS *cmd_while(cond *, vecS*, int);
+vecS *cmd_do_while(cond *, vecS*, int);
 vecS *cmd_read(var *current, int lineno);
 vecS *cmd_write(var *current, int lineno);
 
