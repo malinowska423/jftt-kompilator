@@ -67,7 +67,7 @@ command:
     identifier ASSIGN expression';'                                   {shout(4);$$ = cmd_assign($1, $3, yylineno);}
     | IF condition THEN commands ELSE commands ENDIF                  {shout(5);$$ = cmd_if_else($2, $4, $6, yylineno);}
     | IF condition THEN commands ENDIF                                {shout(6);$$ = cmd_if($2, $4, yylineno);}
-    | WHILE condition DO commands ENDWHILE                            {shout(7);}
+    | WHILE condition DO commands ENDWHILE                            {shout(7);$$ = cmd_while($2, $4, yylineno);}
     | DO commands WHILE condition ENDDO                               {shout(8);}
     | FOR pidentifier FROM value TO value DO commands ENDFOR          {shout(9);}
     | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {shout(10);}

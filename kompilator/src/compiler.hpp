@@ -41,6 +41,8 @@ enum cond_type
 typedef vector<string> vecS;
 struct condition
 {
+    var* sourceA;
+    var* sourceB;
     long long int index;
     cond_type type;
     vecS commands;
@@ -63,6 +65,7 @@ vecS *pass_cmd(vecS *, vecS *);
 vecS *cmd_assign(var *variable, var *expr, int lineno);
 vecS *cmd_if(cond *, vecS *, int);
 vecS *cmd_if_else(cond *, vecS *, vecS *, int);
+vecS *cmd_while(cond *, vecS*, int);
 vecS *cmd_read(var *current, int lineno);
 vecS *cmd_write(var *current, int lineno);
 
@@ -81,9 +84,11 @@ cond *cond_neq(var *, var *, int);
 cond *cond_ge(var *, var *, int);
 cond *cond_geq(var *, var *, int);
 cond *set_condition(var *, var *, int, cond_type);
+cond *change_condition(cond*, int);
 
 void assign_to_p0(long long int value);
 var *set_temp_var(var *);
+void change_temp_var(long long int, vecS*);
 var *set_temp_ptr(var *);
 long long get_var_index(var *);
 string dec_to_bin(long long int);
