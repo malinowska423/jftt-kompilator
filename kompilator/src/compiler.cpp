@@ -106,12 +106,52 @@ vecS *cmd_assign(var *variable, var *expr, int lineno)
 vecS *cmd_if(cond *condition, vecS *_commands, int lineno)
 {
     vecS *_ifCom = new vecS();
-    _ifCom->push_back("ZACZYNAM IFA");
+    vector<int> to_change;
     _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
-    _ifCom->push_back("IFFFFFFFFFFFF COND OVER");
+    _ifCom->push_back("LOAD " + to_string(condition->index));
+    long long int cond_size = _ifCom->size();
+    switch(condition->type) {
+        case JEQ:
+        {
+            to_change.push_back(_ifCom->size());
+            _ifCom->push_back("JPOS ");
+            to_change.push_back(_ifCom->size());
+            _ifCom->push_back("JNEG ");
+        }
+        break;
+        case JNEQ:
+        {
+            to_change.push_back(_ifCom->size());
+            _ifCom->push_back("JZERO ");
+        }
+        break;
+        case JGE:
+        {
+            to_change.push_back(_ifCom->size());
+            _ifCom->push_back("JNEG ");
+            to_change.push_back(_ifCom->size());
+            _ifCom->push_back("JZERO ");
+        }
+        break;
+        case JGEQ:
+        {
+            to_change.push_back(_ifCom->size());
+            _ifCom->push_back("JNEG ");
+        }
+        break;
+        default:
+            error("nieprawidlowa konstrukcja warunku", lineno);
+            break;
+    }
     _ifCom->insert(_ifCom->end(), _commands->begin(), _commands->end());
     _commands->clear();
-    _ifCom->push_back("KONIEC IFA");
+    long long int size = _ifCom->size() - cond_size;
+    for (unsigned int i = 0; i < to_change.size(); i++)
+    {
+        _ifCom->at(to_change.at(i)) += to_string(size);
+        size--; 
+    }
+    
     return _ifCom;
 }
 
@@ -397,23 +437,23 @@ var *plus_minus(var *a, var *b, int lineno, string command)
 
 cond *cond_eq(var *a, var *b, int lineno)
 {
-    return set_condtion(a, b, lineno, EQ);
+    return set_condition(a, b, lineno, JEQ);
 }
 
 cond *cond_neq(var *a, var *b, int lineno)
 {
-    return set_condtion(a, b, lineno, NEQ);
+    return set_condition(a, b, lineno, JNEQ);
 }
 cond *cond_ge(var *a, var *b, int lineno)
 {
-    return set_condtion(a, b, lineno, GE);
+    return set_condition(a, b, lineno, JGE);
 }
 cond *cond_geq(var *a, var *b, int lineno)
 {
-    return set_condtion(a, b, lineno, GEQ);
+    return set_condition(a, b, lineno, JGEQ);
 }
 
-cond *set_condtion(var *a, var *b, int lineno, cond_type type)
+cond *set_condition(var *a, var *b, int lineno, cond_type type)
 {
     var *temp;
     temp = plus_minus(a, b, lineno, "SUB ");
@@ -502,6 +542,22 @@ long long int get_var_index(var *current)
     return getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
 }
 
+void check_jumps(vecS* _commands) {
+    for (unsigned long long int i = 0; i < _commands->size(); i++)
+    {
+        string label = _commands->at(i);
+        bool jump_found = label.find("JPOS") != string::npos || label.find("JZERO") != string::npos || label.find("JNEG") != string::npos;
+        if (jump_found) {
+            string cmd = label.substr(0, label.find(" "));
+            long long int k = stoll(label.substr(label.rfind(" ")));
+            k += i;
+            _commands->at(i) = cmd + " " + to_string(k);
+        }
+    }
+    
+
+}
+
 void set_output_filename(char *filename)
 {
     output_filename = filename;
@@ -514,6 +570,7 @@ void open_file()
 
 void flush_to_file(vecS _commands)
 {
+    check_jumps(&_commands);
     for (unsigned int cmd = 0; cmd < _commands.size(); cmd++)
     {
         _file << _commands.at(cmd) << endl;

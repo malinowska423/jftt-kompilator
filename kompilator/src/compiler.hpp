@@ -32,10 +32,10 @@ typedef struct variable var;
 
 enum cond_type
 {
-    EQ,
-    NEQ,
-    GE,
-    GEQ
+    JEQ,
+    JNEQ,
+    JGE,
+    JGEQ
 };
 
 typedef vector<string> vecS;
@@ -86,3 +86,4 @@ var *set_temp_var(var *);
 var *set_temp_ptr(var *);
 long long get_var_index(var *);
 string dec_to_bin(long long int);
+void check_jumps(vecS*);
