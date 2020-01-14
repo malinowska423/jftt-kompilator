@@ -53,8 +53,6 @@ struct local_var
 };
 typedef struct local_var lVar;
 
-void shout(int);
-
 void error(string msg, int lineno);
 long int get_errors();
 

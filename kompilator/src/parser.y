@@ -44,8 +44,8 @@ int yyerror(const string str);
 %%
 program:
 
-    DECLARE declarations _BEGIN commands END                         {shout(300);cmd_end($4);}
-    | _BEGIN commands END                                               {cmd_end($2);}
+    DECLARE declarations _BEGIN commands END                         {cmd_end($4);}
+    | _BEGIN commands END                                            {cmd_end($2);}
     ;
 
 declarations:
@@ -58,21 +58,21 @@ declarations:
 
 commands:
 
-    commands command                                                    {shout(2);$$ = pass_cmd($1, $2);}
-    | command                                                           {shout(3);$$ = pass_cmd($1);}
+    commands command                                                    {$$ = pass_cmd($1, $2);}
+    | command                                                           {$$ = pass_cmd($1);}
     ;
 
 command:
 
-    identifier ASSIGN expression';'                                   {shout(4);$$ = cmd_assign($1, $3, yylineno);}
-    | IF condition THEN commands ELSE commands ENDIF                  {shout(5);$$ = cmd_if_else($2, $4, $6, yylineno);}
-    | IF condition THEN commands ENDIF                                {shout(6);$$ = cmd_if($2, $4, yylineno);}
-    | WHILE condition DO commands ENDWHILE                            {shout(7);$$ = cmd_while($2, $4, yylineno);}
-    | DO commands WHILE condition ENDDO                               {shout(8);$$ = cmd_do_while($4, $2, yylineno);}
-    | FOR pidentifier FROM value TO value DO commands ENDFOR          {shout(9);$$ = cmd_for(*$2, $4, $6, $8, yylineno);}
-    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {shout(10);$$ = cmd_for_downto(*$2, $4, $6, $8, yylineno);}
-    | READ identifier';'                                              {shout(30);$$ = cmd_read($2, yylineno);}
-    | WRITE value';'                                                  {shout(304);$$ = cmd_write($2, yylineno);}
+    identifier ASSIGN expression';'                                   {$$ = cmd_assign($1, $3, yylineno);}
+    | IF condition THEN commands ELSE commands ENDIF                  {$$ = cmd_if_else($2, $4, $6, yylineno);}
+    | IF condition THEN commands ENDIF                                {$$ = cmd_if($2, $4, yylineno);}
+    | WHILE condition DO commands ENDWHILE                            {$$ = cmd_while($2, $4, yylineno);}
+    | DO commands WHILE condition ENDDO                               {$$ = cmd_do_while($4, $2, yylineno);}
+    | FOR pidentifier FROM value TO value DO commands ENDFOR          {$$ = cmd_for(*$2, $4, $6, $8, yylineno);}
+    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {$$ = cmd_for_downto(*$2, $4, $6, $8, yylineno);}
+    | READ identifier';'                                              {$$ = cmd_read($2, yylineno);}
+    | WRITE value';'                                                  {$$ = cmd_write($2, yylineno);}
     ;
 
 expression:

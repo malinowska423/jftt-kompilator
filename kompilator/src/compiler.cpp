@@ -10,10 +10,6 @@ char *output_filename;
 ofstream _file;
 vector<lVar *> locals;
 
-void shout(int nmbr)
-{
-    cout << "Hi " << nmbr << endl;
-}
 
 void error(string msg, int lineno)
 {
@@ -337,8 +333,15 @@ vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno
         assign_to_p0(_to->index);
         break;
     case VAR:
-        commands.push_back("LOAD " + to_string(_to->index));
+        commands.push_back("LOAD " + to_string(get_var_index(_to)));
         break;
+    case PTR:
+    {
+        var *ptr;
+        ptr = set_temp_ptr(_to);
+        commands.push_back("LOADI " + to_string(ptr->index));
+    }
+    break;
     default:
         error("nieprawidlowa zmienna konczaca petle", lineno);
         break;
@@ -393,8 +396,15 @@ vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands,
         assign_to_p0(_downto->index);
         break;
     case VAR:
-        commands.push_back("LOAD " + to_string(_downto->index));
+        commands.push_back("LOAD " + to_string(get_var_index(_downto)));
         break;
+    case PTR:
+    {
+        var *ptr;
+        ptr = set_temp_ptr(_downto);
+        commands.push_back("LOADI " + to_string(ptr->index));
+    }
+    break;
     default:
         error("nieprawidlowa zmienna konczaca petle", lineno);
         break;
@@ -470,8 +480,7 @@ vecS *cmd_write(var *current, int lineno)
     break;
     case VAR:
     {
-        long long int i = get_var_index(current);
-        _commands->push_back("LOAD " + to_string(i));
+        _commands->push_back("LOAD " + to_string(get_var_index(current)));
     }
     break;
     case PTR:
@@ -503,8 +512,7 @@ var *expr_val(var *value, int lineno)
     break;
     case VAR:
     {
-        long long int i = get_var_index(value);
-        value->index = i;
+        value->index = get_var_index(value);
     }
     break;
     case PTR:
