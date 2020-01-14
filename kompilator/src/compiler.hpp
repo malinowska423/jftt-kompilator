@@ -68,8 +68,8 @@ vecS *cmd_if(cond *, vecS *, int);
 vecS *cmd_if_else(cond *, vecS *, vecS *, int);
 vecS *cmd_while(cond *, vecS *, int);
 vecS *cmd_do_while(cond *, vecS *, int);
-vecS *cmd_for(string, var *,var*, vecS *, int);
-vecS *cmd_for_downto(string, var *,var*, vecS *, int);
+vecS *cmd_for(string, var *, var *, vecS *, int);
+vecS *cmd_for_downto(string, var *, var *, vecS *, int);
 vecS *cmd_read(var *current, int lineno);
 vecS *cmd_write(var *current, int lineno);
 
@@ -80,6 +80,7 @@ var *expr_times(var *a, var *b, int lineno);
 var *expr_div(var *a, var *b, int lineno);
 var *expr_mod(var *a, var *b, int lineno);
 var *plus_minus(var *a, var *b, int lineno, string command);
+var *div_mod(var *, var *, int, bool);
 
 cond *cond_eq(var *, var *, int);
 cond *cond_neq(var *, var *, int);
@@ -91,7 +92,6 @@ cond *change_condition(cond *, int);
 var *cmd_num(long long int value, int lineno);
 var *cmd_pid(string name, long long int index, int lineno);
 var *cmd_pid_arr(string name, string indexName, int lineno);
-
 
 void assign_to_p0(long long int value);
 string dec_to_bin(long long int);
@@ -105,5 +105,5 @@ lVar *get_local_variable(string name);
 bool local_exists(string);
 void set_output_filename(char *);
 void open_file();
-void flush_to_file(vecS*);
+void flush_to_file(vecS *);
 void close_file();

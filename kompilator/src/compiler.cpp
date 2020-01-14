@@ -213,7 +213,7 @@ vecS *cmd_if_else(cond *condition, vecS *if_commands, vecS *else_commands, int l
         _ifCom->at(to_change.at(i)) += to_string(size);
         size--;
     }
-    size = else_commands->size();
+    size = else_commands->size() + 1;
     _ifCom->push_back("JUMP " + to_string(size));
     _ifCom->insert(_ifCom->end(), else_commands->begin(), else_commands->end());
     return _ifCom;
@@ -464,8 +464,8 @@ vecS *cmd_write(var *current, int lineno)
     {
     case VAL:
     {
-        long long int i = current->index;
-        _commands->push_back("LOAD " + to_string(i));
+        assign_to_p0(current->index);
+        _commands->insert(_commands->end(), commands.begin(), commands.end());
     }
     break;
     case VAR:
@@ -714,14 +714,24 @@ var *expr_times(var *a, var *b, int lineno)
 
 var *expr_div(var *a, var *b, int lineno)
 {
-    var* res;
+    return div_mod(a, b, lineno, true);
+}
+
+var *expr_mod(var *a, var *b, int lineno)
+{
+    return div_mod(a, b, lineno, false);
+}
+
+var *div_mod(var *a, var *b, int lineno, bool do_div)
+{
+    var *res;
     assign_to_p0(0);
     res = set_temp_var(nullptr);
-    var* mul;
+    var *mul;
     assign_to_p0(1);
     mul = set_temp_var(nullptr);
-    var* _a;
-    var* _b;
+    var *_a;
+    var *_b;
     switch (a->type)
     {
     case VAL:
@@ -742,7 +752,8 @@ var *expr_div(var *a, var *b, int lineno)
         break;
     }
     _a = set_temp_var(nullptr);
-    if (a->type == VAL ) {
+    if (a->type == VAL)
+    {
         a->type = VAR;
         a = set_temp_var(a);
     }
@@ -784,7 +795,7 @@ var *expr_div(var *a, var *b, int lineno)
     commands.push_back("STORE " + s_b);
     commands.push_back("SUB " + s_a_);
     commands.push_back("JUMP -9");
-    
+
     commands.push_back("LOAD " + s_a);
     commands.push_back("SUB " + s_b);
     commands.push_back("JNEG 7");
@@ -794,8 +805,7 @@ var *expr_div(var *a, var *b, int lineno)
     commands.push_back("LOAD " + s_res);
     commands.push_back("SUB " + s_mul);
     commands.push_back("STORE " + s_res);
-    
-    
+
     commands.push_back("LOAD " + s_b);
     commands.push_back("SHIFT " + to_string(const_minus_one->index));
     commands.push_back("STORE " + s_b);
@@ -810,12 +820,14 @@ var *expr_div(var *a, var *b, int lineno)
     commands.push_back("SUB " + s_res);
     commands.push_back("STORE " + s_res);
 
-    return res;
-}
-
-var *expr_mod(var *a, var *b, int lineno)
-{
-    return nullptr;
+    if (do_div)
+    {
+        return res;
+    }
+    else
+    {
+        return _a;
+    }
 }
 
 cond *cond_eq(var *a, var *b, int lineno)
