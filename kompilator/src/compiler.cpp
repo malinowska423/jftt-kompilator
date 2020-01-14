@@ -7,6 +7,7 @@ vector<var *> temp;
 var *const_one = nullptr;
 char *output_filename;
 ofstream _file;
+vector<lVar *> locals;
 
 void shout(int nmbr)
 {
@@ -259,7 +260,6 @@ vecS *cmd_while(cond *condition, vecS *_commands, int lineno)
     _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
     condition->commands.clear();
 
-
     long long int size = _ifCom->size() - cond_size + 1;
     for (unsigned int i = 0; i < to_change.size(); i++)
     {
@@ -271,7 +271,6 @@ vecS *cmd_while(cond *condition, vecS *_commands, int lineno)
     _ifCom->push_back("JUMP " + to_string(size));
     return _ifCom;
 }
-
 
 vecS *cmd_do_while(cond *condition, vecS *_commands, int lineno)
 {
@@ -315,12 +314,68 @@ vecS *cmd_do_while(cond *condition, vecS *_commands, int lineno)
     return _ifCom;
 }
 
+vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno)
+{
+    vecS *_forCom = new vecS();
+    lVar *_i;
+    _i = get_local_variable(iterator);
+    if (_i == nullptr)
+    {
+        error(iterator + " nie jest zmienna lokalna", lineno);
+    }
+    var *b;
+    switch (_to->type)
+    {
+    case VAL:
+        assign_to_p0(_to->index);
+        break;
+    case VAR:
+        commands.push_back("LOAD " + to_string(_to->index));
+        break;
+    default:
+        error("nieprawidlowa zmienna konczaca petle", lineno);
+        break;
+    }
+    b = set_temp_var(nullptr);
+    plus_minus(_to, _from, lineno, "SUB ");
+    _forCom->insert(_forCom->end(), commands.begin(), commands.end());
+    commands.clear();
+
+    _forCom->push_back("STORE " + to_string(_i->index));
+    int jneg_index = _forCom->size();
+    _forCom->push_back("JNEG ");
+    _forCom->push_back("LOAD " + to_string(b->index));
+    _forCom->push_back("SUB " + to_string(_i->index));
+    _forCom->push_back("STORE " + to_string(_i->index));
+
+    _forCom->insert(_forCom->end(), _commands->begin(), _commands->end());
+    _commands->clear();
+
+    _forCom->push_back("LOAD " + to_string(b->index));
+    _forCom->push_back("SUB " + to_string(_i->index));
+    if (const_one == nullptr)
+    {
+        commands.push_back("INC");
+        const_one = set_temp_var(const_one);
+        commands.push_back("DEC");
+    }
+    _forCom->insert(_forCom->end(), commands.begin(), commands.end());
+    commands.clear();
+    _forCom->push_back("SUB " + to_string(const_one->index));
+    _forCom->push_back("STORE " + to_string(_i->index));
+    long int size = _forCom->size() - jneg_index;
+    _forCom->push_back("JUMP " + to_string(size * (-1)));
+    size++;
+    _forCom->at(jneg_index) += to_string(size); 
+    return _forCom;
+}
+
 vecS *cmd_read(var *current, int lineno)
 {
     vecS *_commands = new vecS();
     if (current->type == VAR)
     {
-        long long int i = getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
+        long long int i = get_var_index(current);
         _commands->push_back("GET");
         _commands->push_back("STORE " + to_string(i));
     }
@@ -388,8 +443,8 @@ var *cmd_pid(string name, long long int index, int lineno)
     s = getsym(name);
     if (s == 0)
     {
-        error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
-        return nullptr;
+        // error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
+        return set_local_variable(name);
     }
     else if (index > 1 && s->type != ARRAY)
     {
@@ -421,13 +476,13 @@ var *cmd_pid_arr(string name, string indexName, int lineno)
         error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
         return nullptr;
     }
-    else if (!symbol_exists(indexName))
-    {
-        error("zmienna " + indexName + " nie zostala zainicjalizowana", lineno);
-        return nullptr;
-    }
     else
     {
+        if (!symbol_exists(indexName))
+        {
+            // error("zmienna " + indexName + " nie zostala zainicjalizowana", lineno);
+            set_local_variable(indexName);
+        }
         var *current_var;
         current_var = (var *)malloc(sizeof(var));
         current_var->name = name;
@@ -716,13 +771,35 @@ var *set_temp_ptr(var *current)
     assign_to_p0(current->index);
     symrec *s;
     s = getsym(current->indexName);
-    commands.push_back("ADD " + to_string(s->storedAt));
+    long long int index;
+    if (s == 0)
+    {
+        lVar *l_var;
+        l_var = get_local_variable(current->indexName);
+        index = l_var->index;
+    }
+    else
+    {
+        index = s->storedAt;
+    }
+    commands.push_back("ADD " + to_string(index));
     return set_temp_var(nullptr);
 }
 
 long long int get_var_index(var *current)
 {
-    return getsym(current->name)->storedAt + current->index - getsym(current->name)->startIndex;
+    symrec *s;
+    s = getsym(current->name);
+    if (s != 0)
+    {
+        return s->storedAt + current->index - s->startIndex;
+    }
+    else
+    {
+        lVar *l_var;
+        l_var = get_local_variable(current->name);
+        return l_var->index;
+    }
 }
 
 void check_jumps(vecS *_commands)
@@ -739,6 +816,56 @@ void check_jumps(vecS *_commands)
             _commands->at(i) = cmd + " " + to_string(k);
         }
     }
+}
+
+var *set_local_variable(string name)
+{
+    var *loc;
+    loc = (var *)malloc(sizeof(var));
+    loc->type = VAR;
+    lVar *ptr;
+    ptr = get_local_variable(name);
+    if (ptr == nullptr)
+    {
+        loc->name = name;
+        long long int i = get_offset() + temp.size();
+        loc->index = i;
+        temp.push_back(loc);
+        ptr = (lVar *)malloc(sizeof(lVar));
+        ptr->name = loc->name;
+        ptr->index = loc->index;
+        locals.push_back(ptr);
+    }
+    else
+    {
+        loc->name = ptr->name;
+        loc->index = ptr->index;
+    }
+    return loc;
+}
+
+lVar *get_local_variable(string name)
+{
+    for (unsigned long long int i = 0; i < locals.size(); i++)
+    {
+        if (locals.at(i)->name.compare(name) == 0)
+        {
+            return locals.at(i);
+        }
+    }
+    return nullptr;
+}
+
+bool local_exists(string name)
+{
+    for (unsigned long long int i = 0; i < locals.size(); i++)
+    {
+        if (locals.at(i)->name.compare(name) == 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void set_output_filename(char *filename)
