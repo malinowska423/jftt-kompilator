@@ -30,6 +30,12 @@ long int get_errors()
     return errors;
 }
 
+void cmd_end(vecS *_commands)
+{
+    _commands->push_back("HALT");
+    flush_to_file(_commands);
+}
+
 vecS *pass_cmd(vecS *_commands)
 {
     return _commands;
@@ -366,7 +372,7 @@ vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno
     long int size = _forCom->size() - jneg_index;
     _forCom->push_back("JUMP " + to_string(size * (-1)));
     size++;
-    _forCom->at(jneg_index) += to_string(size); 
+    _forCom->at(jneg_index) += to_string(size);
     return _forCom;
 }
 
@@ -422,7 +428,7 @@ vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands,
     long int size = _forCom->size() - jneg_index;
     _forCom->push_back("JUMP " + to_string(size * (-1)));
     size++;
-    _forCom->at(jneg_index) += to_string(size); 
+    _forCom->at(jneg_index) += to_string(size);
     return _forCom;
 }
 
@@ -482,76 +488,6 @@ vecS *cmd_write(var *current, int lineno)
     }
     _commands->push_back("PUT");
     return _commands;
-}
-
-var *cmd_num(long long int value, int lineno)
-{
-    var *current_var;
-    current_var = (var *)malloc(sizeof(var));
-    current_var->index = value;
-    current_var->type = VAL;
-    return current_var;
-}
-
-var *cmd_pid(string name, long long int index, int lineno)
-{
-    symrec *s;
-    s = getsym(name);
-    if (s == 0)
-    {
-        // error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
-        return set_local_variable(name);
-    }
-    else if (index > 1 && s->type != ARRAY)
-    {
-        error("zmienna " + name + " nie jest zmienna tablicowa", lineno);
-        return nullptr;
-    }
-    else if (s->type == ARRAY && (index < s->startIndex || index >= (s->startIndex + s->lenght)))
-    {
-        error("indeks " + to_string(index) + " jest poza zakresem tablicy " + name, lineno);
-        return nullptr;
-    }
-    else
-    {
-        var *current_var;
-        current_var = (var *)malloc(sizeof(var));
-        current_var->name = name;
-        current_var->index = index;
-        current_var->type = VAR;
-        return current_var;
-    }
-}
-
-var *cmd_pid_arr(string name, string indexName, int lineno)
-{
-    symrec *s;
-    s = getsym(name);
-    if (s == 0)
-    {
-        error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
-        return nullptr;
-    }
-    else
-    {
-        if (!symbol_exists(indexName))
-        {
-            // error("zmienna " + indexName + " nie zostala zainicjalizowana", lineno);
-            set_local_variable(indexName);
-        }
-        var *current_var;
-        current_var = (var *)malloc(sizeof(var));
-        current_var->name = name;
-        current_var->index = s->storedAt - s->startIndex;
-        current_var->indexName = indexName;
-        current_var->type = PTR;
-        return current_var;
-    }
-}
-
-void cmd_end()
-{
-    commands.push_back("HALT");
 }
 
 var *expr_val(var *value, int lineno)
@@ -706,6 +642,21 @@ var *plus_minus(var *a, var *b, int lineno, string command)
     return nullptr;
 }
 
+var *expr_times(var *a, var *b, int lineno)
+{
+    return nullptr;
+}
+
+var *expr_div(var *a, var *b, int lineno)
+{
+    return nullptr;
+}
+
+var *expr_mod(var *a, var *b, int lineno)
+{
+    return nullptr;
+}
+
 cond *cond_eq(var *a, var *b, int lineno)
 {
     return set_condition(a, b, lineno, JEQ);
@@ -752,6 +703,71 @@ cond *change_condition(cond *condition, int lineno)
     condition->commands.insert(condition->commands.end(), commands.begin(), commands.end());
     commands.clear();
     return condition;
+}
+
+var *cmd_num(long long int value, int lineno)
+{
+    var *current_var;
+    current_var = (var *)malloc(sizeof(var));
+    current_var->index = value;
+    current_var->type = VAL;
+    return current_var;
+}
+
+var *cmd_pid(string name, long long int index, int lineno)
+{
+    symrec *s;
+    s = getsym(name);
+    if (s == 0)
+    {
+        // error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
+        return set_local_variable(name);
+    }
+    else if (index > 1 && s->type != ARRAY)
+    {
+        error("zmienna " + name + " nie jest zmienna tablicowa", lineno);
+        return nullptr;
+    }
+    else if (s->type == ARRAY && (index < s->startIndex || index >= (s->startIndex + s->lenght)))
+    {
+        error("indeks " + to_string(index) + " jest poza zakresem tablicy " + name, lineno);
+        return nullptr;
+    }
+    else
+    {
+        var *current_var;
+        current_var = (var *)malloc(sizeof(var));
+        current_var->name = name;
+        current_var->index = index;
+        current_var->type = VAR;
+        return current_var;
+    }
+}
+
+var *cmd_pid_arr(string name, string indexName, int lineno)
+{
+    symrec *s;
+    s = getsym(name);
+    if (s == 0)
+    {
+        error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
+        return nullptr;
+    }
+    else
+    {
+        if (!symbol_exists(indexName))
+        {
+            // error("zmienna " + indexName + " nie zostala zainicjalizowana", lineno);
+            set_local_variable(indexName);
+        }
+        var *current_var;
+        current_var = (var *)malloc(sizeof(var));
+        current_var->name = name;
+        current_var->index = s->storedAt - s->startIndex;
+        current_var->indexName = indexName;
+        current_var->type = PTR;
+        return current_var;
+    }
 }
 
 void assign_to_p0(long long int value)
@@ -934,18 +950,17 @@ void open_file()
     _file.open(output_filename);
 }
 
-void flush_to_file(vecS _commands)
+void flush_to_file(vecS *_commands)
 {
-    check_jumps(&_commands);
-    for (unsigned int cmd = 0; cmd < _commands.size(); cmd++)
+    check_jumps(_commands);
+    for (unsigned int cmd = 0; cmd < _commands->size(); cmd++)
     {
-        _file << _commands.at(cmd) << endl;
+        _file << _commands->at(cmd) << endl;
     }
-    _commands.clear();
+    _commands->clear();
 }
 
 void close_file()
 {
-    flush_to_file(commands);
     _file.close();
 }

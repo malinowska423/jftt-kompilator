@@ -44,8 +44,8 @@ int yyerror(const string str);
 %%
 program:
 
-    DECLARE declarations _BEGIN commands END                         {shout(300);flush_to_file(*$4);cmd_end();close_file();}
-    | _BEGIN commands END                                               {}
+    DECLARE declarations _BEGIN commands END                         {shout(300);cmd_end($4);}
+    | _BEGIN commands END                                               {cmd_end($2);}
     ;
 
 declarations:
@@ -80,9 +80,9 @@ expression:
     value                       {$$ = expr_val($1, yylineno);}
     | value PLUS value          {$$ = expr_plus($1, $3, yylineno);}
     | value MINUS value         {$$ = expr_minus($1, $3, yylineno);}
-    | value TIMES value         {}
-    | value DIV value           {}
-    | value MOD value           {}
+    | value TIMES value         {$$ = expr_times($1, $3, yylineno);}
+    | value DIV value           {$$ = expr_div($1, $3, yylineno);}
+    | value MOD value           {$$ = expr_mod($1, $3, yylineno);}
     ;
 
 condition:
