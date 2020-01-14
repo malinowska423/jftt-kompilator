@@ -714,7 +714,103 @@ var *expr_times(var *a, var *b, int lineno)
 
 var *expr_div(var *a, var *b, int lineno)
 {
-    return nullptr;
+    var* res;
+    assign_to_p0(0);
+    res = set_temp_var(nullptr);
+    var* mul;
+    assign_to_p0(1);
+    mul = set_temp_var(nullptr);
+    var* _a;
+    var* _b;
+    switch (a->type)
+    {
+    case VAL:
+        assign_to_p0(a->index);
+        break;
+    case VAR:
+        commands.push_back("LOAD " + to_string(get_var_index(a)));
+        break;
+    case PTR:
+    {
+        var *ptr;
+        ptr = set_temp_ptr(a);
+        commands.push_back("LOADI " + to_string(ptr->index));
+    }
+    break;
+    default:
+        error("nieprawidlowa zmienna", lineno);
+        break;
+    }
+    _a = set_temp_var(nullptr);
+    if (a->type == VAL ) {
+        a->type = VAR;
+        a = set_temp_var(a);
+    }
+    switch (b->type)
+    {
+    case VAL:
+        assign_to_p0(b->index);
+        break;
+    case VAR:
+        commands.push_back("LOAD " + to_string(get_var_index(b)));
+        break;
+    case PTR:
+    {
+        var *ptr;
+        ptr = set_temp_ptr(b);
+        commands.push_back("LOADI " + to_string(ptr->index));
+    }
+    break;
+    default:
+        error("nieprawidlowa zmienna", lineno);
+        break;
+    }
+    _b = set_temp_var(nullptr);
+    string s_a = to_string(_a->index);
+    string s_b = to_string(_b->index);
+    string s_res = to_string(res->index);
+    string s_mul = to_string(mul->index);
+    string s_a_ = to_string(a->index);
+
+    commands.push_back("LOAD " + s_b);
+    commands.push_back("SUB " + s_a_);
+    commands.push_back("JPOS 10");
+    commands.push_back("JZERO 9");
+    commands.push_back("LOAD " + s_mul);
+    commands.push_back("SHIFT " + to_string(const_one->index));
+    commands.push_back("STORE " + s_mul);
+    commands.push_back("LOAD " + s_b);
+    commands.push_back("SHIFT " + to_string(const_one->index));
+    commands.push_back("STORE " + s_b);
+    commands.push_back("SUB " + s_a_);
+    commands.push_back("JUMP -9");
+    
+    commands.push_back("LOAD " + s_a);
+    commands.push_back("SUB " + s_b);
+    commands.push_back("JNEG 7");
+    commands.push_back("LOAD " + s_a);
+    commands.push_back("SUB " + s_b);
+    commands.push_back("STORE " + s_a);
+    commands.push_back("LOAD " + s_res);
+    commands.push_back("SUB " + s_mul);
+    commands.push_back("STORE " + s_res);
+    
+    
+    commands.push_back("LOAD " + s_b);
+    commands.push_back("SHIFT " + to_string(const_minus_one->index));
+    commands.push_back("STORE " + s_b);
+    commands.push_back("LOAD " + s_mul);
+    commands.push_back("SHIFT " + to_string(const_minus_one->index));
+    commands.push_back("STORE " + s_mul);
+    commands.push_back("JPOS -15");
+    commands.push_back("JNEG -16");
+
+    commands.push_back("LOAD " + s_res);
+    commands.push_back("SUB " + s_res);
+    commands.push_back("SUB " + s_res);
+    commands.push_back("STORE " + s_res);
+
+    return res;
 }
 
 var *expr_mod(var *a, var *b, int lineno)
