@@ -5,6 +5,7 @@ long int errors = 0;
 vector<string> commands;
 vector<var *> temp;
 var *const_one = nullptr;
+var *const_minus_one = nullptr;
 char *output_filename;
 ofstream _file;
 vector<lVar *> locals;
@@ -644,7 +645,71 @@ var *plus_minus(var *a, var *b, int lineno, string command)
 
 var *expr_times(var *a, var *b, int lineno)
 {
-    return nullptr;
+    var *tempA;
+    var *tempB;
+    var *res;
+    assign_to_p0(0);
+    res = set_temp_var(nullptr);
+    switch (a->type)
+    {
+    case VAL:
+        assign_to_p0(a->index);
+        break;
+    case VAR:
+        commands.push_back("LOAD " + to_string(get_var_index(a)));
+        break;
+    case PTR:
+    {
+        var *ptr;
+        ptr = set_temp_ptr(a);
+        commands.push_back("LOADI " + to_string(ptr->index));
+    }
+    break;
+    default:
+        error("nieprawidlowa zmienna", lineno);
+        break;
+    }
+    tempA = set_temp_var(nullptr);
+    switch (b->type)
+    {
+    case VAL:
+        assign_to_p0(b->index);
+        break;
+    case VAR:
+        commands.push_back("LOAD " + to_string(get_var_index(b)));
+        break;
+    case PTR:
+    {
+        var *ptr;
+        ptr = set_temp_ptr(b);
+        commands.push_back("LOADI " + to_string(ptr->index));
+    }
+    break;
+    default:
+        error("nieprawidlowa zmienna", lineno);
+        break;
+    }
+    tempB = set_temp_var(nullptr);
+    string _a = to_string(tempA->index);
+    string _b = to_string(tempB->index);
+    string _res = to_string(res->index);
+    commands.push_back("LOAD " + _a);
+    commands.push_back("JZERO 15");
+    commands.push_back("SHIFT " + to_string(const_minus_one->index));
+    commands.push_back("SHIFT " + to_string(const_one->index));
+    commands.push_back("SUB " + _a);
+    commands.push_back("JZERO 4");
+    commands.push_back("LOAD " + _res);
+    commands.push_back("ADD " + _b);
+    commands.push_back("STORE " + _res);
+    commands.push_back("LOAD " + _b);
+    commands.push_back("ADD " + _b);
+    commands.push_back("STORE " + _b);
+    commands.push_back("LOAD " + _a);
+    commands.push_back("SHIFT " + to_string(const_minus_one->index));
+    commands.push_back("STORE " + _a);
+    commands.push_back("JUMP -14");
+    return res;
 }
 
 var *expr_div(var *a, var *b, int lineno)
@@ -780,6 +845,12 @@ void assign_to_p0(long long int value)
             commands.push_back("INC");
             const_one = set_temp_var(const_one);
             commands.push_back("DEC");
+        }
+        if (const_minus_one == nullptr)
+        {
+            commands.push_back("DEC");
+            const_minus_one = set_temp_var(const_minus_one);
+            commands.push_back("INC");
         }
 
         string x = dec_to_bin(value > 0 ? value * (-1) : value);
