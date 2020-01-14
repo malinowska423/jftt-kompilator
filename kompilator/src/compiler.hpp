@@ -77,6 +77,7 @@ vecS *cmd_if_else(cond *, vecS *, vecS *, int);
 vecS *cmd_while(cond *, vecS *, int);
 vecS *cmd_do_while(cond *, vecS *, int);
 vecS *cmd_for(string, var *,var*, vecS *, int);
+vecS *cmd_for_downto(string, var *,var*, vecS *, int);
 vecS *cmd_read(var *current, int lineno);
 vecS *cmd_write(var *current, int lineno);
 

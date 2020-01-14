@@ -70,7 +70,7 @@ command:
     | WHILE condition DO commands ENDWHILE                            {shout(7);$$ = cmd_while($2, $4, yylineno);}
     | DO commands WHILE condition ENDDO                               {shout(8);$$ = cmd_do_while($4, $2, yylineno);}
     | FOR pidentifier FROM value TO value DO commands ENDFOR          {shout(9);$$ = cmd_for(*$2, $4, $6, $8, yylineno);}
-    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {shout(10);}
+    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {shout(10);$$ = cmd_for_downto(*$2, $4, $6, $8, yylineno);}
     | READ identifier';'                                              {shout(30);$$ = cmd_read($2, yylineno);}
     | WRITE value';'                                                  {shout(304);$$ = cmd_write($2, yylineno);}
     ;

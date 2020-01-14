@@ -370,6 +370,62 @@ vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno
     return _forCom;
 }
 
+vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands, int lineno)
+{
+    vecS *_forCom = new vecS();
+    lVar *_i;
+    _i = get_local_variable(iterator);
+    if (_i == nullptr)
+    {
+        error(iterator + " nie jest zmienna lokalna", lineno);
+    }
+    var *b;
+    switch (_downto->type)
+    {
+    case VAL:
+        assign_to_p0(_downto->index);
+        break;
+    case VAR:
+        commands.push_back("LOAD " + to_string(_downto->index));
+        break;
+    default:
+        error("nieprawidlowa zmienna konczaca petle", lineno);
+        break;
+    }
+    b = set_temp_var(nullptr);
+    plus_minus(_from, _downto, lineno, "SUB ");
+    _forCom->insert(_forCom->end(), commands.begin(), commands.end());
+    commands.clear();
+
+    _forCom->push_back("STORE " + to_string(_i->index));
+    int jneg_index = _forCom->size();
+    _forCom->push_back("JNEG ");
+    _forCom->push_back("LOAD " + to_string(b->index));
+    _forCom->push_back("ADD " + to_string(_i->index));
+    _forCom->push_back("STORE " + to_string(_i->index));
+
+    _forCom->insert(_forCom->end(), _commands->begin(), _commands->end());
+    _commands->clear();
+
+    _forCom->push_back("LOAD " + to_string(_i->index));
+    _forCom->push_back("SUB " + to_string(b->index));
+    if (const_one == nullptr)
+    {
+        commands.push_back("INC");
+        const_one = set_temp_var(const_one);
+        commands.push_back("DEC");
+    }
+    _forCom->insert(_forCom->end(), commands.begin(), commands.end());
+    commands.clear();
+    _forCom->push_back("SUB " + to_string(const_one->index));
+    _forCom->push_back("STORE " + to_string(_i->index));
+    long int size = _forCom->size() - jneg_index;
+    _forCom->push_back("JUMP " + to_string(size * (-1)));
+    size++;
+    _forCom->at(jneg_index) += to_string(size); 
+    return _forCom;
+}
+
 vecS *cmd_read(var *current, int lineno)
 {
     vecS *_commands = new vecS();
