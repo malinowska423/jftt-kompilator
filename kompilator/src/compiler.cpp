@@ -648,8 +648,10 @@ var *expr_times(var *a, var *b, int lineno)
     var *tempA;
     var *tempB;
     var *res;
+    var *sign;
     assign_to_p0(0);
     res = set_temp_var(nullptr);
+    sign = set_temp_var(nullptr);
     switch (a->type)
     {
     case VAL:
@@ -693,7 +695,22 @@ var *expr_times(var *a, var *b, int lineno)
     string _a = to_string(tempA->index);
     string _b = to_string(tempB->index);
     string _res = to_string(res->index);
+    string _sign = to_string(sign->index);
+
+    // sign saving
+    commands.push_back("LOAD " + _b);
+    commands.push_back("JZERO 31");
     commands.push_back("LOAD " + _a);
+    commands.push_back("JZERO 29");
+    commands.push_back("JPOS 7");
+    commands.push_back("LOAD " + to_string(const_one->index));
+    commands.push_back("STORE " + _sign);
+    commands.push_back("LOAD " + _a);
+    commands.push_back("SUB " + _a);
+    commands.push_back("SUB " + _a);
+    commands.push_back("STORE " + _a);
+
+    // multiplication
     commands.push_back("JZERO 15");
     commands.push_back("SHIFT " + to_string(const_minus_one->index));
     commands.push_back("SHIFT " + to_string(const_one->index));
@@ -709,6 +726,15 @@ var *expr_times(var *a, var *b, int lineno)
     commands.push_back("SHIFT " + to_string(const_minus_one->index));
     commands.push_back("STORE " + _a);
     commands.push_back("JUMP -14");
+
+    // sign check
+    commands.push_back("LOAD " + _sign);
+    commands.push_back("JZERO 5");
+    commands.push_back("LOAD " + _res);
+    commands.push_back("SUB " + _res);
+    commands.push_back("SUB " + _res);
+    commands.push_back("STORE " + _res);
+
     return res;
 }
 
