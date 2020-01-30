@@ -807,20 +807,43 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
     string s_mul = to_string(mul->index);
     string s_a_ = to_string(tempA->index);
 
-    // changing sign to +
-    commands.push_back("LOAD " + s_a);
-    commands.push_back("JZERO 59");
-    commands.push_back("JPOS 5");
-    commands.push_back("SUB " + s_a);
-    commands.push_back("SUB " + s_a);
-    commands.push_back("STORE " + s_a);
-    commands.push_back("STORE " + s_a_);
-    commands.push_back("LOAD " + s_b);
-    commands.push_back("JZERO 52");
-    commands.push_back("JPOS 4");
-    commands.push_back("SUB " + s_b);
-    commands.push_back("SUB " + s_b);
-    commands.push_back("STORE " + s_b);
+    if (do_div)
+    {
+        // changing sign to +
+        commands.push_back("LOAD " + s_a);
+        commands.push_back("JZERO 59");
+        commands.push_back("JPOS 5");
+        commands.push_back("SUB " + s_a);
+        commands.push_back("SUB " + s_a);
+        commands.push_back("STORE " + s_a);
+        commands.push_back("STORE " + s_a_);
+        commands.push_back("LOAD " + s_b);
+        commands.push_back("JZERO 52");
+        commands.push_back("JPOS 4");
+        commands.push_back("SUB " + s_b);
+        commands.push_back("SUB " + s_b);
+        commands.push_back("STORE " + s_b);
+    }
+    else
+    {
+        commands.push_back("LOAD " + s_b);
+        commands.push_back("JPOS 9");
+        commands.push_back("JNEG 5");
+        commands.push_back("LOAD " + s_a);
+        commands.push_back("SUB " + s_a);
+        commands.push_back("STORE " + s_a);
+        commands.push_back("JUMP 55"); //out
+        commands.push_back("SUB " + s_b);
+        commands.push_back("SUB " + s_b);
+        commands.push_back("STORE " + s_b);
+        commands.push_back("LOAD " + s_a);
+        commands.push_back("JZERO 50"); //out
+        commands.push_back("JPOS 5");
+        commands.push_back("SUB " + s_a);
+        commands.push_back("SUB " + s_a);
+        commands.push_back("STORE " + s_a);
+        commands.push_back("STORE " + s_a_);
+    }
 
     // division
     commands.push_back("LOAD " + s_b);
@@ -857,9 +880,10 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
 
     s_a = to_string(a->index);
     s_b = to_string(b->index);
+    s_a_ = to_string(_a->index);
     if (do_div)
     {
-        //sign change
+        // result sign change
         commands.push_back("LOAD " + s_b);
         commands.push_back("JPOS 2");
         commands.push_back("JNEG 4");
@@ -870,7 +894,7 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
         commands.push_back("JPOS 7");
         commands.push_back("JNEG 10");
 
-        commands.push_back("LOAD " + to_string(_a->index));
+        commands.push_back("LOAD " + s_a_);
         commands.push_back("JZERO 4");
         commands.push_back("LOAD " + s_res);
         commands.push_back("ADD " + to_string(const_one->index));
@@ -885,6 +909,21 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
     }
     else
     {
+        commands.push_back("LOAD " + s_a_);
+        commands.push_back("JZERO 14");
+        commands.push_back("LOAD " + s_a);
+        commands.push_back("JNEG 4");
+        commands.push_back("LOAD " + s_b);
+        commands.push_back("JPOS 10"); //out
+        commands.push_back("JNEG 7");
+        commands.push_back("LOAD " + s_a_);
+        commands.push_back("SUB " + s_a_);
+        commands.push_back("SUB " + s_a_);
+        commands.push_back("STORE " + s_a_);
+        commands.push_back("LOAD " + s_b);
+        commands.push_back("JNEG 3"); //out
+        commands.push_back("ADD " + s_a_);
+        commands.push_back("STORE " + s_a_);
         return _a;
     }
 }
