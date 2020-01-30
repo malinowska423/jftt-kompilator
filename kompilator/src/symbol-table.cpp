@@ -3,16 +3,16 @@
 symrec *sym_table = (symrec *)0;
 long long int offset = 1;
 
-symrec *putsym(string sym_name, long int lenght, long int startIndex, sym_type type)
+symrec *putsym(string sym_name, long long int lenght, long long int startIndex, sym_type type)
 {
     symrec *ptr;
-    ptr = (symrec *)malloc(sizeof(symrec));
+    ptr = new symrec;
     ptr->name = sym_name;
     ptr->lenght = lenght;
     ptr->startIndex = startIndex;
     ptr->isInit = false;
     ptr->storedAt = offset;
-    offset += lenght; 
+    offset += lenght;
     ptr->type = type;
     ptr->next = (struct symrec *)sym_table;
     sym_table = ptr;
@@ -32,7 +32,6 @@ symrec *getsym(string sym_name)
     return 0;
 }
 
-
 void init_var(string name, int lineno)
 {
     symrec *s;
@@ -47,7 +46,7 @@ void init_var(string name, int lineno)
     }
 }
 
-void init_array(string name, long int startIndex, long int endIndex, int lineno)
+void init_array(string name, long long int startIndex, long long int endIndex, int lineno)
 {
     symrec *s;
     s = getsym(name);
@@ -65,26 +64,21 @@ void init_array(string name, long int startIndex, long int endIndex, int lineno)
     }
 }
 
-bool symbol_exists(string name) {
+bool symbol_exists(string name)
+{
     symrec *s;
     s = getsym(name);
-    if (s == 0) {
+    if (s == 0)
+    {
         return false;
-    } else {
+    }
+    else
+    {
         return true;
     }
 }
 
-long long int get_offset() {
-    return offset;
-}
-
-void printTable()
+long long int get_offset()
 {
-    symrec *ptr;
-    for (ptr = sym_table; ptr != (symrec *)0; ptr = (symrec *)ptr->next)
-    {
-        cout << ptr->name << "(" << ptr->storedAt << ")\t";
-    }
-    cout << endl;
+    return offset;
 }

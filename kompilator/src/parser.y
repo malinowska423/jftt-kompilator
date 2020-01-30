@@ -125,20 +125,14 @@ int main(int argv, char* argc[]) {
 
 	yyparse();
 
-    if (get_errors() == 0) {
-        cout << "Kompilacja zakonczona pomyslnie" << endl;
-        return 0;
-    } else {
-        cout << "Kompilacja nieudana" << endl;
-        return 1;
-    }
+    cout << "Kompilacja zakonczona pomyslnie" << endl;
+    return 0;
 }
 
 int yyerror(string err) {
     if (err == "syntax error") {
         err = "niepoprawna skladnia";
     }
-    cerr << "Blad (linia " << yylineno << "):\t" << err << endl;
-    cout << "Kompilacja nieudana" << endl;
-    exit(1);
+    error(err, yylineno);
+    return 1;
 }

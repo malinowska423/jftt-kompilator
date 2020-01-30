@@ -1,30 +1,22 @@
 #include "compiler.hpp"
 #include "symbol-table.hpp"
 
-long int errors = 0;
-vector<string> commands;
+vecS commands;
 vector<var *> temp;
+vector<lVar *> locals;
+
 var *const_one = nullptr;
 var *const_minus_one = nullptr;
+
 char *output_filename;
 ofstream _file;
-vector<lVar *> locals;
 
 
 void error(string msg, int lineno)
 {
-    if (errors == 0)
-    {
-        cerr << "Bledy:\n";
-    }
-    errors++;
-    cerr << "\tlinia " << lineno << ": " << msg << endl;
+    cerr << "Blad (linia " << lineno << "): " << msg << endl;
+    cerr << "Kompilacja nieudana" << endl;
     exit(1);
-}
-
-long int get_errors()
-{
-    return errors;
 }
 
 void cmd_end(vecS *_commands)
@@ -859,7 +851,7 @@ cond *cond_geq(var *a, var *b, int lineno)
 cond *set_condition(var *a, var *b, int lineno, cond_type type)
 {
     cond *condition;
-    condition = (cond *)malloc(sizeof(cond));
+    condition = new cond;
     condition->sourceA = a;
     condition->sourceB = b;
     var *temp;
@@ -889,7 +881,7 @@ cond *change_condition(cond *condition, int lineno)
 var *cmd_num(long long int value, int lineno)
 {
     var *current_var;
-    current_var = (var *)malloc(sizeof(var));
+    current_var = new var;
     current_var->index = value;
     current_var->type = VAL;
     return current_var;
@@ -917,7 +909,7 @@ var *cmd_pid(string name, long long int index, int lineno)
     else
     {
         var *current_var;
-        current_var = (var *)malloc(sizeof(var));
+        current_var = new var;
         current_var->name = name;
         current_var->index = index;
         current_var->type = VAR;
@@ -942,7 +934,7 @@ var *cmd_pid_arr(string name, string indexName, int lineno)
             set_local_variable(indexName);
         }
         var *current_var;
-        current_var = (var *)malloc(sizeof(var));
+        current_var = new var;
         current_var->name = name;
         current_var->index = s->storedAt - s->startIndex;
         current_var->indexName = indexName;
@@ -1007,7 +999,7 @@ var *set_temp_var(var *variable)
 {
     if (variable == nullptr)
     {
-        variable = (var *)malloc(sizeof(var));
+        variable = new var;
         variable->type = VAL;
     }
 
@@ -1080,7 +1072,7 @@ void check_jumps(vecS *_commands)
 var *set_local_variable(string name)
 {
     var *loc;
-    loc = (var *)malloc(sizeof(var));
+    loc = new var;
     loc->type = VAR;
     lVar *ptr;
     ptr = get_local_variable(name);
@@ -1090,7 +1082,7 @@ var *set_local_variable(string name)
         long long int i = get_offset() + temp.size();
         loc->index = i;
         temp.push_back(loc);
-        ptr = (lVar *)malloc(sizeof(lVar));
+        ptr = new lVar;
         ptr->name = loc->name;
         ptr->index = loc->index;
         locals.push_back(ptr);

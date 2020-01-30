@@ -53,7 +53,7 @@ struct local_var
 };
 typedef struct local_var lVar;
 
-void error(string msg, int lineno);
+void error(string, int);
 long int get_errors();
 
 void cmd_end(vecS *);
@@ -61,23 +61,23 @@ void cmd_end(vecS *);
 vecS *pass_cmd(vecS *);
 vecS *pass_cmd(vecS *, vecS *);
 
-vecS *cmd_assign(var *variable, var *expr, int lineno);
+vecS *cmd_assign(var *, var *, int);
 vecS *cmd_if(cond *, vecS *, int);
 vecS *cmd_if_else(cond *, vecS *, vecS *, int);
 vecS *cmd_while(cond *, vecS *, int);
 vecS *cmd_do_while(cond *, vecS *, int);
 vecS *cmd_for(string, var *, var *, vecS *, int);
 vecS *cmd_for_downto(string, var *, var *, vecS *, int);
-vecS *cmd_read(var *current, int lineno);
-vecS *cmd_write(var *current, int lineno);
+vecS *cmd_read(var *, int);
+vecS *cmd_write(var *, int);
 
-var *expr_val(var *value, int lineno);
-var *expr_plus(var *a, var *b, int lineno);
-var *expr_minus(var *a, var *b, int lineno);
-var *expr_times(var *a, var *b, int lineno);
-var *expr_div(var *a, var *b, int lineno);
-var *expr_mod(var *a, var *b, int lineno);
-var *plus_minus(var *a, var *b, int lineno, string command);
+var *expr_val(var *, int);
+var *expr_plus(var *, var *, int);
+var *expr_minus(var *, var *, int);
+var *expr_times(var *, var *, int);
+var *expr_div(var *, var *, int);
+var *expr_mod(var *, var *, int);
+var *plus_minus(var *, var *, int, string);
 var *div_mod(var *, var *, int, bool);
 
 cond *cond_eq(var *, var *, int);
@@ -87,19 +87,19 @@ cond *cond_geq(var *, var *, int);
 cond *set_condition(var *, var *, int, cond_type);
 cond *change_condition(cond *, int);
 
-var *cmd_num(long long int value, int lineno);
-var *cmd_pid(string name, long long int index, int lineno);
-var *cmd_pid_arr(string name, string indexName, int lineno);
+var *cmd_num(long long int, int);
+var *cmd_pid(string, long long int, int);
+var *cmd_pid_arr(string, string, int);
 
-void assign_to_p0(long long int value);
+void assign_to_p0(long long int);
 string dec_to_bin(long long int);
 var *set_temp_var(var *);
 void change_temp_var(long long int, vecS *);
 var *set_temp_ptr(var *);
 long long get_var_index(var *);
 void check_jumps(vecS *);
-var *set_local_variable(string name);
-lVar *get_local_variable(string name);
+var *set_local_variable(string);
+lVar *get_local_variable(string);
 bool local_exists(string);
 void set_output_filename(char *);
 void open_file();
