@@ -11,7 +11,6 @@ var *const_minus_one = nullptr;
 char *output_filename;
 ofstream _file;
 
-
 void error(string msg, int lineno)
 {
     cerr << "Blad (linia " << lineno << "): " << msg << endl;
@@ -758,6 +757,7 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
     mul = set_temp_var(nullptr);
     var *_a;
     var *_b;
+    var *tempA;
     switch (a->type)
     {
     case VAL:
@@ -778,11 +778,8 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
         break;
     }
     _a = set_temp_var(nullptr);
-    if (a->type == VAL)
-    {
-        a->type = VAR;
-        a = set_temp_var(a);
-    }
+    tempA = set_temp_var(nullptr);
+    a = set_temp_var(a);
     switch (b->type)
     {
     case VAL:
@@ -803,12 +800,29 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
         break;
     }
     _b = set_temp_var(nullptr);
+    b = set_temp_var(b);
     string s_a = to_string(_a->index);
     string s_b = to_string(_b->index);
     string s_res = to_string(res->index);
     string s_mul = to_string(mul->index);
-    string s_a_ = to_string(a->index);
+    string s_a_ = to_string(tempA->index);
 
+    // changing sign to +
+    commands.push_back("LOAD " + s_a);
+    commands.push_back("JZERO 59");
+    commands.push_back("JPOS 5");
+    commands.push_back("SUB " + s_a);
+    commands.push_back("SUB " + s_a);
+    commands.push_back("STORE " + s_a);
+    commands.push_back("STORE " + s_a_);
+    commands.push_back("LOAD " + s_b);
+    commands.push_back("JZERO 52");
+    commands.push_back("JPOS 4");
+    commands.push_back("SUB " + s_b);
+    commands.push_back("SUB " + s_b);
+    commands.push_back("STORE " + s_b);
+
+    // division
     commands.push_back("LOAD " + s_b);
     commands.push_back("SUB " + s_a_);
     commands.push_back("JPOS 10");
@@ -829,7 +843,7 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
     commands.push_back("SUB " + s_b);
     commands.push_back("STORE " + s_a);
     commands.push_back("LOAD " + s_res);
-    commands.push_back("SUB " + s_mul);
+    commands.push_back("ADD " + s_mul);
     commands.push_back("STORE " + s_res);
 
     commands.push_back("LOAD " + s_b);
@@ -841,13 +855,32 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
     commands.push_back("JPOS -15");
     commands.push_back("JNEG -16");
 
-    commands.push_back("LOAD " + s_res);
-    commands.push_back("SUB " + s_res);
-    commands.push_back("SUB " + s_res);
-    commands.push_back("STORE " + s_res);
-
+    s_a = to_string(a->index);
+    s_b = to_string(b->index);
     if (do_div)
     {
+        //sign change
+        commands.push_back("LOAD " + s_b);
+        commands.push_back("JPOS 2");
+        commands.push_back("JNEG 4");
+        commands.push_back("LOAD " + s_a);
+        commands.push_back("JPOS 14");
+        commands.push_back("JNEG 4");
+        commands.push_back("LOAD " + s_a);
+        commands.push_back("JPOS 7");
+        commands.push_back("JNEG 10");
+
+        commands.push_back("LOAD " + to_string(_a->index));
+        commands.push_back("JZERO 4");
+        commands.push_back("LOAD " + s_res);
+        commands.push_back("ADD " + to_string(const_one->index));
+        commands.push_back("STORE " + s_res);
+
+        commands.push_back("LOAD " + s_res);
+        commands.push_back("SUB " + s_res);
+        commands.push_back("SUB " + s_res);
+        commands.push_back("STORE " + s_res);
+
         return res;
     }
     else
