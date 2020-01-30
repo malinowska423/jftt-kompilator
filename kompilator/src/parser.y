@@ -28,7 +28,6 @@ int yyerror(const string str);
 %token <pidentifier> pidentifier
 %token <num> num
 
-//Types
 %type <variable> value
 %type <variable> identifier
 %type <variable> expression
@@ -36,7 +35,6 @@ int yyerror(const string str);
 %type <command> command
 %type <command> commands
 
-//Operators precedence
 %left PLUS MINUS
 %left TIMES DIV MOD
      
@@ -103,7 +101,7 @@ value:
 
 identifier:
 
-    pidentifier                                 {$$ = cmd_pid(*$1,1, yylineno);}
+    pidentifier                                 {$$ = cmd_pid(*$1, 1, yylineno);}
     | pidentifier'('pidentifier')'              {$$ = cmd_pid_arr(*$1, *$3, yylineno);}
     | pidentifier'('num')'                      {$$ = cmd_pid(*$1, $3, yylineno);}
     ;
@@ -113,7 +111,7 @@ identifier:
 
 int main(int argv, char* argc[]) {
     if( argv != 3 ) {
-        cerr << "Prawidlowe wywolanie: kompilator plik_wejsciowy plik_wyjsciowy" << endl;
+        cerr << "Prawidlowe wywolanie: ./kompilator plik_wejsciowy plik_wyjsciowy" << endl;
         return 1;
     }
 
@@ -137,7 +135,10 @@ int main(int argv, char* argc[]) {
 }
 
 int yyerror(string err) {
-    cerr << "Wystapil blad (linia " << yylineno << "):\t" << err << endl;
+    if (err == "syntax error") {
+        err = "niepoprawna skladnia";
+    }
+    cerr << "Blad (linia " << yylineno << "):\t" << err << endl;
     cout << "Kompilacja nieudana" << endl;
     exit(1);
 }
