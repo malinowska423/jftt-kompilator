@@ -32,3 +32,5 @@ void init_var(string, int);
 void init_array(string, long long int, long long int, int);
 bool symbol_exists(string);
 long long int get_offset();
+void set_init(string);
+bool is_init(string);

@@ -82,3 +82,17 @@ long long int get_offset()
 {
     return offset;
 }
+
+void set_init(string name)
+{
+    symrec *s;
+    s = getsym(name);
+    s->isInit = true;
+}
+
+bool is_init(string name)
+{
+    symrec *s;
+    s = getsym(name);
+    return s->isInit;
+}

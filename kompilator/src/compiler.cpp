@@ -38,6 +38,7 @@ vecS *pass_cmd(vecS *_commands, vecS *_command)
 
 vecS *cmd_assign(var *variable, var *expr, int lineno)
 {
+    set_init(variable->name);
     vecS *_commands = new vecS();
     _commands->insert(_commands->end(), commands.begin(), commands.end());
     commands.clear();
@@ -308,6 +309,18 @@ vecS *cmd_do_while(cond *condition, vecS *_commands, int lineno)
     return _ifCom;
 }
 
+void cmd_for_init(string iterator, int lineno)
+{
+    if (local_exists(iterator))
+    {
+        error("zmienna " + iterator + " jest juz uzywana", lineno);
+    }
+    else
+    {
+        set_local_variable(iterator);
+    }
+}
+
 vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno)
 {
     vecS *_forCom = new vecS();
@@ -315,7 +328,7 @@ vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno
     _i = get_local_variable(iterator);
     if (_i == nullptr)
     {
-        error(iterator + " nie jest zmienna lokalna", lineno);
+        error("zmienna " + iterator + " nie jest zmienna lokalna", lineno);
     }
     var *b;
     switch (_to->type)
@@ -368,6 +381,7 @@ vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno
     _forCom->push_back("JUMP " + to_string(size * (-1)));
     size++;
     _forCom->at(jneg_index) += to_string(size);
+    erase_local_variable(_i->name);
     return _forCom;
 }
 
@@ -378,7 +392,7 @@ vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands,
     _i = get_local_variable(iterator);
     if (_i == nullptr)
     {
-        error(iterator + " nie jest zmienna lokalna", lineno);
+        error("zmienna " + iterator + " nie jest zmienna lokalna", lineno);
     }
     var *b;
     switch (_downto->type)
@@ -431,11 +445,13 @@ vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands,
     _forCom->push_back("JUMP " + to_string(size * (-1)));
     size++;
     _forCom->at(jneg_index) += to_string(size);
+    erase_local_variable(_i->name);
     return _forCom;
 }
 
 vecS *cmd_read(var *current, int lineno)
 {
+    set_init(current->name);
     vecS *_commands = new vecS();
     if (current->type == VAR)
     {
@@ -460,6 +476,7 @@ vecS *cmd_read(var *current, int lineno)
 
 vecS *cmd_write(var *current, int lineno)
 {
+    // check_init(current->name, lineno);
     vecS *_commands = new vecS();
     switch (current->type)
     {
@@ -493,6 +510,7 @@ vecS *cmd_write(var *current, int lineno)
 
 var *expr_val(var *value, int lineno)
 {
+    // check_init(value->name, lineno);
     switch (value->type)
     {
     case VAL:
@@ -529,6 +547,8 @@ var *expr_minus(var *a, var *b, int lineno)
 
 var *plus_minus(var *a, var *b, int lineno, string command)
 {
+    // check_init(a->name, lineno);
+    // check_init(b->name, lineno);
     if (a->type == VAL)
     {
         if (b->type == VAL)
@@ -644,6 +664,8 @@ var *plus_minus(var *a, var *b, int lineno, string command)
 
 var *expr_times(var *a, var *b, int lineno)
 {
+    // check_init(a->name, lineno);
+    // check_init(b->name, lineno);
     var *tempA;
     var *tempB;
     var *res;
@@ -749,6 +771,8 @@ var *expr_mod(var *a, var *b, int lineno)
 
 var *div_mod(var *a, var *b, int lineno, bool do_div)
 {
+    // check_init(a->name, lineno);
+    // check_init(b->name, lineno);
     var *res;
     assign_to_p0(0);
     res = set_temp_var(nullptr);
@@ -948,6 +972,8 @@ cond *cond_geq(var *a, var *b, int lineno)
 
 cond *set_condition(var *a, var *b, int lineno, cond_type type)
 {
+    // check_init(a->name, lineno);
+    // check_init(b->name, lineno);
     cond *condition;
     condition = new cond;
     condition->sourceA = a;
@@ -991,8 +1017,15 @@ var *cmd_pid(string name, long long int index, int lineno)
     s = getsym(name);
     if (s == 0)
     {
-        // error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
-        return set_local_variable(name);
+        if (!local_exists(name))
+        {
+            error("zmienna " + name + " nie zostala zadeklarowana", lineno);
+            return nullptr;
+        }
+        else
+        {
+            return set_local_variable(name);
+        }
     }
     else if (index > 1 && s->type != ARRAY)
     {
@@ -1021,15 +1054,23 @@ var *cmd_pid_arr(string name, string indexName, int lineno)
     s = getsym(name);
     if (s == 0)
     {
-        error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
+        error("zmienna " + name + " nie zostala zadeklarowana", lineno);
         return nullptr;
     }
     else
     {
         if (!symbol_exists(indexName))
         {
-            // error("zmienna " + indexName + " nie zostala zainicjalizowana", lineno);
-            set_local_variable(indexName);
+
+            if (!local_exists(indexName))
+            {
+                error("zmienna " + indexName + " nie zostala zadeklarowana", lineno);
+                return nullptr;
+            }
+            else
+            {
+                set_local_variable(indexName);
+            }
         }
         var *current_var;
         current_var = new var;
@@ -1044,20 +1085,20 @@ var *cmd_pid_arr(string name, string indexName, int lineno)
 void assign_to_p0(long long int value)
 {
     commands.push_back("SUB 0");
+    if (const_one == nullptr)
+    {
+        commands.push_back("INC");
+        const_one = set_temp_var(const_one);
+        commands.push_back("DEC");
+    }
+    if (const_minus_one == nullptr)
+    {
+        commands.push_back("DEC");
+        const_minus_one = set_temp_var(const_minus_one);
+        commands.push_back("INC");
+    }
     if (value != 0)
     {
-        if (const_one == nullptr)
-        {
-            commands.push_back("INC");
-            const_one = set_temp_var(const_one);
-            commands.push_back("DEC");
-        }
-        if (const_minus_one == nullptr)
-        {
-            commands.push_back("DEC");
-            const_minus_one = set_temp_var(const_minus_one);
-            commands.push_back("INC");
-        }
 
         string x = dec_to_bin(value > 0 ? value * (-1) : value);
         for (unsigned long long i = 0; i < x.length() - 1; i++)
@@ -1205,6 +1246,17 @@ lVar *get_local_variable(string name)
     return nullptr;
 }
 
+void erase_local_variable(string name)
+{
+    for (unsigned long long int i = 0; i < locals.size(); i++)
+    {
+        if (locals.at(i)->name.compare(name) == 0)
+        {
+            locals.erase(locals.begin() + i);
+        }
+    }
+}
+
 bool local_exists(string name)
 {
     for (unsigned long long int i = 0; i < locals.size(); i++)
@@ -1215,6 +1267,13 @@ bool local_exists(string name)
         }
     }
     return false;
+}
+
+void check_init(string name, int lineno)
+{
+    // if(!is_init(name)) {
+    //     error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
+    // }
 }
 
 void set_output_filename(char *filename)

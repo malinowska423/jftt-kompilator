@@ -67,8 +67,10 @@ command:
     | IF condition THEN commands ENDIF                                {$$ = cmd_if($2, $4, yylineno);}
     | WHILE condition DO commands ENDWHILE                            {$$ = cmd_while($2, $4, yylineno);}
     | DO commands WHILE condition ENDDO                               {$$ = cmd_do_while($4, $2, yylineno);}
-    | FOR pidentifier FROM value TO value DO commands ENDFOR          {$$ = cmd_for(*$2, $4, $6, $8, yylineno);}
-    | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR      {$$ = cmd_for_downto(*$2, $4, $6, $8, yylineno);}
+    | FOR pidentifier FROM value TO value                             {cmd_for_init(*$2, yylineno);}
+      DO commands ENDFOR                                              {$$ = cmd_for(*$2, $4, $6, $9, yylineno);}
+    | FOR pidentifier FROM value DOWNTO value                         {cmd_for_init(*$2, yylineno);}
+      DO commands ENDFOR                                              {$$ = cmd_for_downto(*$2, $4, $6, $9, yylineno);}
     | READ identifier';'                                              {$$ = cmd_read($2, yylineno);}
     | WRITE value';'                                                  {$$ = cmd_write($2, yylineno);}
     ;
