@@ -14,5 +14,5 @@
 /kompilator/src/parser.o
 /kompilator/src/parser.c
 /kompilator/src/parser.h
-/kompilator/src/compiler
+/kompilator/src/kompilator
 /kompilator/tests/

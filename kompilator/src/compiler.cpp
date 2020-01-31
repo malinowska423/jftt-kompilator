@@ -2,6 +2,7 @@
 #include "symbol-table.hpp"
 
 vecS commands;
+vecS front_commands;
 vector<var *> temp;
 vector<lVar *> locals;
 
@@ -20,6 +21,8 @@ void error(string msg, int lineno)
 
 void cmd_end(vecS *_commands)
 {
+    _commands->insert(_commands->begin(), front_commands.begin(), front_commands.end());
+    front_commands.clear();
     _commands->push_back("HALT");
     flush_to_file(_commands);
 }
@@ -38,6 +41,7 @@ vecS *pass_cmd(vecS *_commands, vecS *_command)
 
 vecS *cmd_assign(var *variable, var *expr, int lineno)
 {
+    init_consts();
     if (variable->type == VAR)
     {
 
@@ -112,6 +116,7 @@ vecS *cmd_assign(var *variable, var *expr, int lineno)
 
 vecS *cmd_if(cond *condition, vecS *_commands, int lineno)
 {
+    init_consts();
     vecS *_ifCom = new vecS();
     vector<int> to_change;
     _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
@@ -165,6 +170,7 @@ vecS *cmd_if(cond *condition, vecS *_commands, int lineno)
 
 vecS *cmd_if_else(cond *condition, vecS *if_commands, vecS *else_commands, int lineno)
 {
+    init_consts();
     vecS *_ifCom = new vecS();
     vector<int> to_change;
     _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
@@ -220,6 +226,7 @@ vecS *cmd_if_else(cond *condition, vecS *if_commands, vecS *else_commands, int l
 
 vecS *cmd_while(cond *condition, vecS *_commands, int lineno)
 {
+    init_consts();
     vecS *_ifCom = new vecS();
     vector<int> to_change;
     _ifCom->insert(_ifCom->end(), condition->commands.begin(), condition->commands.end());
@@ -280,6 +287,7 @@ vecS *cmd_while(cond *condition, vecS *_commands, int lineno)
 
 vecS *cmd_do_while(cond *condition, vecS *_commands, int lineno)
 {
+    init_consts();
     vecS *_ifCom = new vecS();
     _ifCom->insert(_ifCom->end(), _commands->begin(), _commands->end());
     _commands->clear();
@@ -322,6 +330,7 @@ vecS *cmd_do_while(cond *condition, vecS *_commands, int lineno)
 
 void cmd_for_init(string iterator, int lineno)
 {
+    init_consts();
     if (local_exists(iterator))
     {
         error("zmienna " + iterator + " jest juz uzywana", lineno);
@@ -334,6 +343,7 @@ void cmd_for_init(string iterator, int lineno)
 
 vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno)
 {
+    init_consts();
     vecS *_forCom = new vecS();
     lVar *_i;
     _i = get_local_variable(iterator);
@@ -398,6 +408,7 @@ vecS *cmd_for(string iterator, var *_from, var *_to, vecS *_commands, int lineno
 
 vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands, int lineno)
 {
+    init_consts();
     vecS *_forCom = new vecS();
     lVar *_i;
     _i = get_local_variable(iterator);
@@ -462,6 +473,7 @@ vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands,
 
 vecS *cmd_read(var *current, int lineno)
 {
+    init_consts();
     if (local_exists(current->name))
     {
         error("zmienna " + current->name + " jest zmienna lokalna, a jej modyfikacja jest zabroniona", lineno);
@@ -491,6 +503,7 @@ vecS *cmd_read(var *current, int lineno)
 
 vecS *cmd_write(var *current, int lineno)
 {
+    init_consts();
     // check_init(current->name, lineno);
     vecS *_commands = new vecS();
     switch (current->type)
@@ -525,6 +538,7 @@ vecS *cmd_write(var *current, int lineno)
 
 var *expr_val(var *value, int lineno)
 {
+    init_consts();
     // check_init(value->name, lineno);
     switch (value->type)
     {
@@ -562,6 +576,7 @@ var *expr_minus(var *a, var *b, int lineno)
 
 var *plus_minus(var *a, var *b, int lineno, string command)
 {
+    init_consts();
     // check_init(a->name, lineno);
     // check_init(b->name, lineno);
     if (a->type == VAL)
@@ -679,6 +694,7 @@ var *plus_minus(var *a, var *b, int lineno, string command)
 
 var *expr_times(var *a, var *b, int lineno)
 {
+    init_consts();
     // check_init(a->name, lineno);
     // check_init(b->name, lineno);
     var *tempA;
@@ -786,6 +802,7 @@ var *expr_mod(var *a, var *b, int lineno)
 
 var *div_mod(var *a, var *b, int lineno, bool do_div)
 {
+    init_consts();
     // check_init(a->name, lineno);
     // check_init(b->name, lineno);
     var *res;
@@ -987,6 +1004,7 @@ cond *cond_geq(var *a, var *b, int lineno)
 
 cond *set_condition(var *a, var *b, int lineno, cond_type type)
 {
+    init_consts();
     // check_init(a->name, lineno);
     // check_init(b->name, lineno);
     cond *condition;
@@ -1008,6 +1026,7 @@ cond *set_condition(var *a, var *b, int lineno, cond_type type)
 
 cond *change_condition(cond *condition, int lineno)
 {
+    init_consts();
     var tempA = *condition->sourceA;
     var tempB = *condition->sourceB;
     plus_minus(&tempA, &tempB, lineno, "SUB ");
@@ -1321,6 +1340,26 @@ bool local_exists(string name)
         }
     }
     return false;
+}
+
+void init_consts()
+{
+    if (const_one == nullptr)
+    {
+        commands.push_back("SUB 0");
+        commands.push_back("INC");
+        const_one = set_temp_var(const_one);
+        front_commands.insert(front_commands.end(), commands.begin(), commands.end());
+        commands.clear();
+    }
+    if (const_minus_one == nullptr)
+    {
+        commands.push_back("SUB 0");
+        commands.push_back("DEC");
+        const_minus_one = set_temp_var(const_minus_one);
+        front_commands.insert(front_commands.end(), commands.begin(), commands.end());
+        commands.clear();
+    }
 }
 
 void set_output_filename(char *filename)

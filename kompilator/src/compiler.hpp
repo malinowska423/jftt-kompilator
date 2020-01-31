@@ -105,6 +105,7 @@ var *set_local_variable(string);
 lVar *get_local_variable(string);
 void erase_local_variable(string);
 bool local_exists(string);
+void init_consts();
 void set_output_filename(char *);
 void open_file();
 void flush_to_file(vecS *);
