@@ -875,14 +875,14 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
     {
         // changing sign to +
         commands.push_back("LOAD " + s_a);
-        commands.push_back("JZERO 59");
+        commands.push_back("JZERO 57"); //out
         commands.push_back("JPOS 5");
         commands.push_back("SUB " + s_a);
         commands.push_back("SUB " + s_a);
         commands.push_back("STORE " + s_a);
         commands.push_back("STORE " + s_a_);
         commands.push_back("LOAD " + s_b);
-        commands.push_back("JZERO 52");
+        commands.push_back("JZERO 50"); //out
         commands.push_back("JPOS 4");
         commands.push_back("SUB " + s_b);
         commands.push_back("SUB " + s_b);
@@ -949,14 +949,12 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
     {
         // result sign change
         commands.push_back("LOAD " + s_b);
-        commands.push_back("JPOS 2");
         commands.push_back("JNEG 4");
         commands.push_back("LOAD " + s_a);
-        commands.push_back("JPOS 14");
+        commands.push_back("JPOS 13"); //out
         commands.push_back("JNEG 4");
         commands.push_back("LOAD " + s_a);
-        commands.push_back("JPOS 7");
-        commands.push_back("JNEG 10");
+        commands.push_back("JNEG 10"); //out
 
         commands.push_back("LOAD " + s_a_);
         commands.push_back("JZERO 4");
