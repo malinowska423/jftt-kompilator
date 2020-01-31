@@ -103,7 +103,7 @@ value:
 
 identifier:
 
-    pidentifier                                 {$$ = cmd_pid(*$1, 1, yylineno);}
+    pidentifier                                 {$$ = cmd_pid(*$1, yylineno);}
     | pidentifier'('pidentifier')'              {$$ = cmd_pid_arr(*$1, *$3, yylineno);}
     | pidentifier'('num')'                      {$$ = cmd_pid(*$1, $3, yylineno);}
     ;

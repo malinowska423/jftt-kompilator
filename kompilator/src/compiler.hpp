@@ -89,6 +89,7 @@ cond *set_condition(var *, var *, int, cond_type);
 cond *change_condition(cond *, int);
 
 var *cmd_num(long long int, int);
+var *cmd_pid(string, int);
 var *cmd_pid(string, long long int, int);
 var *cmd_pid_arr(string, string, int);
 

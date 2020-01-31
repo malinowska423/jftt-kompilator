@@ -1011,7 +1011,8 @@ var *cmd_num(long long int value, int lineno)
     return current_var;
 }
 
-var *cmd_pid(string name, long long int index, int lineno)
+// variable
+var *cmd_pid(string name, int lineno)
 {
     symrec *s;
     s = getsym(name);
@@ -1027,7 +1028,33 @@ var *cmd_pid(string name, long long int index, int lineno)
             return set_local_variable(name);
         }
     }
-    else if (index > 1 && s->type != ARRAY)
+    else if (s->type == ARRAY)
+    {
+        error("zmienna " + name + " jest zmienna tablicowa", lineno);
+        return nullptr;
+    }
+    else
+    {
+        var *current_var;
+        current_var = new var;
+        current_var->name = name;
+        current_var->index = (long long int)1;
+        current_var->type = VAR;
+        return current_var;
+    }
+}
+
+// array
+var *cmd_pid(string name, long long int index, int lineno)
+{
+    symrec *s;
+    s = getsym(name);
+    if (s == 0)
+    {
+        error("zmienna " + name + " nie zostala zadeklarowana", lineno);
+        return nullptr;
+    }
+    else if (s->type != ARRAY)
     {
         error("zmienna " + name + " nie jest zmienna tablicowa", lineno);
         return nullptr;
