@@ -6,7 +6,8 @@ vecS front_commands;
 vector<var *> temp;
 vector<lVar *> locals;
 
-struct var_init {
+struct var_init
+{
     string name;
     long long int lineno;
 };
@@ -83,8 +84,8 @@ vecS *cmd_assign(var *variable, var *expr, int lineno)
                 i = expr->index;
                 _commands->push_back("LOAD " + to_string(i));
             }
-            i = get_var_index(variable);
         }
+        i = get_var_index(variable);
         _commands->push_back("STORE " + to_string(i));
     }
     break;
@@ -338,13 +339,20 @@ vecS *cmd_do_while(cond *condition, vecS *_commands, int lineno)
 void cmd_for_init(string iterator, int lineno)
 {
     init_consts();
-    if (local_exists(iterator))
+    if (symbol_exists(iterator))
     {
-        error("zmienna " + iterator + " jest juz uzywana", lineno);
+        error("zmienna " + iterator + " zostala juz zadeklarowana i nie moze byc uzyta w petli for", lineno);
     }
     else
     {
-        set_local_variable(iterator);
+        if (local_exists(iterator))
+        {
+            error("zmienna " + iterator + " jest juz uzywana", lineno);
+        }
+        else
+        {
+            set_local_variable(iterator);
+        }
     }
 }
 
@@ -1302,8 +1310,10 @@ void check_jumps(vecS *_commands)
     }
 }
 
-void check_inits() {
-    if(!not_init.empty()) {
+void check_inits()
+{
+    if (!not_init.empty())
+    {
         var_init v = not_init.front();
         error("zmienna " + v.name + " nie zostala zainicjalizowana", v.lineno);
     }
