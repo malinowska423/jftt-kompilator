@@ -6,6 +6,12 @@ vecS front_commands;
 vector<var *> temp;
 vector<lVar *> locals;
 
+struct var_init {
+    string name;
+    long long int lineno;
+};
+vector<var_init> not_init;
+
 var *const_one = nullptr;
 var *const_minus_one = nullptr;
 
@@ -52,6 +58,7 @@ vecS *cmd_assign(var *variable, var *expr, int lineno)
         else
         {
             set_init(variable->name);
+            erase_init_variable(variable->name);
         }
     }
     vecS *_commands = new vecS();
@@ -482,6 +489,7 @@ vecS *cmd_read(var *current, int lineno)
     if (current->type == VAR)
     {
         set_init(current->name);
+        erase_local_variable(current->name);
         long long int i = get_var_index(current);
         _commands->push_back("GET");
         _commands->push_back("STORE " + to_string(i));
@@ -1051,7 +1059,22 @@ var *cmd_id(var *variable, int lineno)
     {
         if (!is_init(variable->name))
         {
-            error("zmienna " + variable->name + " nie zostala zainicjalizowana", lineno);
+            bool found = false;
+            for (unsigned long long int i = 0; i < not_init.size() && !found; i++)
+            {
+                if (not_init.at(i).name.compare(variable->name) == 0)
+                {
+                    found = true;
+                }
+            }
+            if (!found)
+            {
+                var_init v;
+                v.name = variable->name;
+                v.lineno = lineno;
+                not_init.push_back(v);
+            }
+            // error("zmienna " + variable->name + " nie zostala zainicjalizowana", lineno);
         }
     }
     return variable;
@@ -1281,6 +1304,13 @@ void check_jumps(vecS *_commands)
     }
 }
 
+void check_inits() {
+    if(!not_init.empty()) {
+        var_init v = not_init.front();
+        error("zmienna " + v.name + " nie zostala zainicjalizowana", v.lineno);
+    }
+}
+
 var *set_local_variable(string name)
 {
     var *loc;
@@ -1330,6 +1360,17 @@ void erase_local_variable(string name)
     }
 }
 
+void erase_init_variable(string name)
+{
+    for (unsigned long long int i = 0; i < not_init.size(); i++)
+    {
+        if (not_init.at(i).name.compare(name) == 0)
+        {
+            not_init.erase(not_init.begin() + i);
+        }
+    }
+}
+
 bool local_exists(string name)
 {
     for (unsigned long long int i = 0; i < locals.size(); i++)
@@ -1374,6 +1415,7 @@ void open_file()
 
 void flush_to_file(vecS *_commands)
 {
+    check_inits();
     check_jumps(_commands);
     for (unsigned int cmd = 0; cmd < _commands->size(); cmd++)
     {
