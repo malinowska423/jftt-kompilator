@@ -952,7 +952,7 @@ var *div_mod(var *a, var *b, int lineno, bool do_div)
         commands.push_back("JNEG 4");
         commands.push_back("LOAD " + s_a);
         commands.push_back("JPOS 13"); //out
-        commands.push_back("JNEG 4");
+        commands.push_back("JNEG 3");
         commands.push_back("LOAD " + s_a);
         commands.push_back("JNEG 10"); //out
 
