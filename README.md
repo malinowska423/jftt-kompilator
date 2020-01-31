@@ -3,7 +3,7 @@
 Repozytorium to zawiera projekt kompilatora prostego języka imperatywnego do kodu maszyny wirtualnej, stworzony w ramach kursu <b>Języki Formalne i Techniki Translacji</b>. Jest to przedmiot realizowany dla studentów trzeciego roku informatyki na wydziale WPPT Politechniki Wrocławskiej. Wykładowcą jest <b>dr Maciej Gębala</b>. 
 
 ## Kompilacja
-W celu kompilacji plików źródłowych należy użyć polecenia `make`.
+W celu kompilacji plików źródłowych należy przejść do katalogu `kompilator/src` i użyć polecenia `make`.
 
 Aby usunąć pliki powstałe w wyniku kompilacji należy wywołać polecenie `make clean`.
 
