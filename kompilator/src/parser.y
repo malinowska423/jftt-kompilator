@@ -98,7 +98,7 @@ condition:
 value:
 
     num                         {$$ = cmd_num($1, yylineno);}
-    | identifier                {$$ = $1;}
+    | identifier                {$$ = cmd_id($1, yylineno);}
     ;
 
 identifier:

@@ -89,6 +89,7 @@ cond *set_condition(var *, var *, int, cond_type);
 cond *change_condition(cond *, int);
 
 var *cmd_num(long long int, int);
+var *cmd_id(var *, int);
 var *cmd_pid(string, int);
 var *cmd_pid(string, long long int, int);
 var *cmd_pid_arr(string, string, int);
@@ -104,7 +105,6 @@ var *set_local_variable(string);
 lVar *get_local_variable(string);
 void erase_local_variable(string);
 bool local_exists(string);
-void check_init(string, int);
 void set_output_filename(char *);
 void open_file();
 void flush_to_file(vecS *);

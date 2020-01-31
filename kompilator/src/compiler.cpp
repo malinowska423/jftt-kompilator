@@ -38,7 +38,18 @@ vecS *pass_cmd(vecS *_commands, vecS *_command)
 
 vecS *cmd_assign(var *variable, var *expr, int lineno)
 {
-    set_init(variable->name);
+    if (variable->type == VAR)
+    {
+
+        if (local_exists(variable->name))
+        {
+            error("zmienna " + variable->name + " jest zmienna lokalna, a jej modyfikacja jest zabroniona", lineno);
+        }
+        else
+        {
+            set_init(variable->name);
+        }
+    }
     vecS *_commands = new vecS();
     _commands->insert(_commands->end(), commands.begin(), commands.end());
     commands.clear();
@@ -451,10 +462,14 @@ vecS *cmd_for_downto(string iterator, var *_from, var *_downto, vecS *_commands,
 
 vecS *cmd_read(var *current, int lineno)
 {
-    set_init(current->name);
+    if (local_exists(current->name))
+    {
+        error("zmienna " + current->name + " jest zmienna lokalna, a jej modyfikacja jest zabroniona", lineno);
+    }
     vecS *_commands = new vecS();
     if (current->type == VAR)
     {
+        set_init(current->name);
         long long int i = get_var_index(current);
         _commands->push_back("GET");
         _commands->push_back("STORE " + to_string(i));
@@ -1011,6 +1026,18 @@ var *cmd_num(long long int value, int lineno)
     return current_var;
 }
 
+var *cmd_id(var *variable, int lineno)
+{
+    if (variable->type == VAR && !local_exists(variable->name))
+    {
+        if (!is_init(variable->name))
+        {
+            error("zmienna " + variable->name + " nie zostala zainicjalizowana", lineno);
+        }
+    }
+    return variable;
+}
+
 // variable
 var *cmd_pid(string name, int lineno)
 {
@@ -1294,13 +1321,6 @@ bool local_exists(string name)
         }
     }
     return false;
-}
-
-void check_init(string name, int lineno)
-{
-    // if(!is_init(name)) {
-    //     error("zmienna " + name + " nie zostala zainicjalizowana", lineno);
-    // }
 }
 
 void set_output_filename(char *filename)
